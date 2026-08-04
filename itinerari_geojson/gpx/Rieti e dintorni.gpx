@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" creator="mapstogpx.com" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd">
+  <metadata>
+    <link href="http://www.mapstogpx.com">
+      <text>Sverrir Sigmundarson</text>
+    </link>
+    <!--desc>Powered by Google, ©2026 Google</desc-->
+    <!--copyright author="Google Inc">
+    	<year>2026</year>
+    	<license>https://developers.google.com/maps/terms</license>
+    </copyright-->
+    <!--url>https://www.google.it/maps/dir/Piazza+Cavour,+02100+Rieti+RI/Rieti+Sotterranea,+Piazza+Cavour,+02100+Rieti+RI/Palazzo+Comunale,+Piazza+Vittorio+Emanuele+II,+13,+02100+Rieti+RI/Duomo+di+Santa+Maria+Assunta+in+Vazia,+Piazza+Cesare+Battisti,+1,+02100+Rieti+RI/Palazzo+papale,+Via+Cintia,+87,+02100+Rieti+RI/Piazza+S.+Rufo,+02100+Rieti+RI/@42.4021717,12.8592324,18z/data=!3m1!5s0x132fabae41de9117:0xf05aae445e28b751!4m38!4m37!1m5!1m1!1s0x132fabb014e95ddd:0x339c0eac9cd346ac!2m2!1d12.8618039!2d42.3993975!1m5!1m1!1s0x132fab84fa0f2e01:0x2e34685cad4dab15!2m2!1d12.8610231!2d42.3995211!1m5!1m1!1s0x132fab4ca6695b57:0xdf308617b18c200d!2m2!1d12.8609015!2d42.4026808!1m5!1m1!1s0x132fabae47da1a7b:0x48eff4ee675776af!2m2!1d12.8591252!2d42.4021748!1m5!1m1!1s0x132fabcd5918255f:0xd1c1f7a4c3ebeb21!2m2!1d12.8588378!2d42.4023869!1m5!1m1!1s0x132fabaf9197ffc5:0x94f8b3102b32d3eb!2m2!1d12.862122!2d42.4020622!3e2?entry=tts&g_ep=EgoyMDI2MDcwOC4wIPu8ASoASAFQAw%3D%3D&skid=aaeeb0fa-c6c1-4d4d-8c1c-8dab2a02fd4c&hl=en</url-->
+    <time>2026-07-11T14:36:07Z</time>
+  </metadata>
+  <wpt lat="42.3993975" lon="12.8618039">
+    <name>Piazza Cavour</name>
+    <desc>Piazza Cavour, 02100 Rieti RI, Italy</desc>
+  </wpt>
+  <wpt lat="42.3995211" lon="12.8610231">
+    <name>Rieti Underground</name>
+    <desc>Rieti Underground, Piazza Cavour, 02100 Rieti RI, Italy</desc>
+  </wpt>
+  <wpt lat="42.4026808" lon="12.8609015">
+    <name>Palazzo Comunale</name>
+    <desc>Palazzo Comunale, Piazza Vittorio Emanuele II, 13, 02100 Rieti RI, Italy</desc>
+  </wpt>
+  <wpt lat="42.4021748" lon="12.8591252">
+    <name>Cattedrale di Santa Maria Assunta</name>
+    <desc>Cattedrale di Santa Maria Assunta, Piazza Cesare Battisti, 1, 02100 Rieti RI, Italy</desc>
+  </wpt>
+  <wpt lat="42.4023869" lon="12.8588378">
+    <name>Palazzo papale</name>
+    <desc>Palazzo papale, Via Cintia, 87, 02100 Rieti RI, Italy</desc>
+  </wpt>
+  <wpt lat="42.4020622" lon="12.862122">
+    <name>Piazza S. Rufo</name>
+    <desc>Piazza S. Rufo, 02100 Rieti RI, Italy</desc>
+  </wpt>
+<trk>
+  <name>Piazza Cavour to Piazza S. Rufo</name>
+  <number>1</number>
+  <trkseg>
+  <trkpt lat="42.3993975" lon="12.8618039">
+    <name>TP001</name>
+  </trkpt>
+  <trkpt lat="42.39944" lon="12.86131">
+    <name>TP002</name>
+  </trkpt>
+  <trkpt lat="42.39946" lon="12.86102">
+    <name>TP003</name>
+  </trkpt>
+  <trkpt lat="42.3994574" lon="12.8610151">
+    <name>TP004</name>
+  </trkpt>
+  <trkpt lat="42.3994574" lon="12.8610151">
+    <name>TP005</name>
+  </trkpt>
+  <trkpt lat="42.39946" lon="12.86097">
+    <name>TP006</name>
+  </trkpt>
+  <trkpt lat="42.39947" lon="12.86077">
+    <name>TP007</name>
+  </trkpt>
+  <trkpt lat="42.399474" lon="12.8607727">
+    <name>TP008</name>
+  </trkpt>
+  <trkpt lat="42.39953" lon="12.86077">
+    <name>TP009</name>
+  </trkpt>
+  <trkpt lat="42.39959" lon="12.86078">
+    <name>TP010</name>
+  </trkpt>
+  <trkpt lat="42.39978" lon="12.8608">
+    <name>TP011</name>
+  </trkpt>
+  <trkpt lat="42.39979" lon="12.8608">
+    <name>TP012</name>
+  </trkpt>
+  <trkpt lat="42.39988" lon="12.86081">
+    <name>TP013</name>
+  </trkpt>
+  <trkpt lat="42.39997" lon="12.86082">
+    <name>TP014</name>
+  </trkpt>
+  <trkpt lat="42.4" lon="12.86082">
+    <name>TP015</name>
+  </trkpt>
+  <trkpt lat="42.40015" lon="12.86084">
+    <name>TP016</name>
+  </trkpt>
+  <trkpt lat="42.4001468" lon="12.8608383">
+    <name>TP017</name>
+  </trkpt>
+  <trkpt lat="42.40018" lon="12.86084">
+    <name>TP018</name>
+  </trkpt>
+  <trkpt lat="42.40034" lon="12.86087">
+    <name>TP019</name>
+  </trkpt>
+  <trkpt lat="42.40106" lon="12.86096">
+    <name>TP020</name>
+  </trkpt>
+  <trkpt lat="42.40147" lon="12.86102">
+    <name>TP021</name>
+  </trkpt>
+  <trkpt lat="42.40178" lon="12.86106">
+    <name>TP022</name>
+  </trkpt>
+  <trkpt lat="42.40192" lon="12.86113">
+    <name>TP023</name>
+  </trkpt>
+  <trkpt lat="42.40211" lon="12.8611">
+    <name>TP024</name>
+  </trkpt>
+  <trkpt lat="42.40216" lon="12.86109">
+    <name>TP025</name>
+  </trkpt>
+  <trkpt lat="42.40237" lon="12.86102">
+    <name>TP026</name>
+  </trkpt>
+  <trkpt lat="42.40251" lon="12.86097">
+    <name>TP027</name>
+  </trkpt>
+  <trkpt lat="42.402507" lon="12.8609664">
+    <name>TP028</name>
+  </trkpt>
+  <trkpt lat="42.40259" lon="12.86093">
+    <name>TP029</name>
+  </trkpt>
+  <trkpt lat="42.4025895" lon="12.8609303">
+    <name>TP030</name>
+  </trkpt>
+  <trkpt lat="42.4026491" lon="12.8609185">
+    <name>TP031</name>
+  </trkpt>
+  <trkpt lat="42.40266" lon="12.86053">
+    <name>TP032</name>
+  </trkpt>
+  <trkpt lat="42.4026553" lon="12.8605269">
+    <name>TP033</name>
+  </trkpt>
+  <trkpt lat="42.4026" lon="12.86049">
+    <name>TP034</name>
+  </trkpt>
+  <trkpt lat="42.40256" lon="12.86044">
+    <name>TP035</name>
+  </trkpt>
+  <trkpt lat="42.40251" lon="12.86038">
+    <name>TP036</name>
+  </trkpt>
+  <trkpt lat="42.4025" lon="12.86036">
+    <name>TP037</name>
+  </trkpt>
+  <trkpt lat="42.40248" lon="12.86035">
+    <name>TP038</name>
+  </trkpt>
+  <trkpt lat="42.40219" lon="12.86037">
+    <name>TP039</name>
+  </trkpt>
+  <trkpt lat="42.40208" lon="12.86038">
+    <name>TP040</name>
+  </trkpt>
+  <trkpt lat="42.4020764" lon="12.8603777">
+    <name>TP041</name>
+  </trkpt>
+  <trkpt lat="42.40206" lon="12.86">
+    <name>TP042</name>
+  </trkpt>
+  <trkpt lat="42.40206" lon="12.85985">
+    <name>TP043</name>
+  </trkpt>
+  <trkpt lat="42.40206" lon="12.85973">
+    <name>TP044</name>
+  </trkpt>
+  <trkpt lat="42.40206" lon="12.85964">
+    <name>TP045</name>
+  </trkpt>
+  <trkpt lat="42.40206" lon="12.85954">
+    <name>TP046</name>
+  </trkpt>
+  <trkpt lat="42.40206" lon="12.85948">
+    <name>TP047</name>
+  </trkpt>
+  <trkpt lat="42.40207" lon="12.85947">
+    <name>TP048</name>
+  </trkpt>
+  <trkpt lat="42.40208" lon="12.85947">
+    <name>TP049</name>
+  </trkpt>
+  <trkpt lat="42.40216" lon="12.85947">
+    <name>TP050</name>
+  </trkpt>
+  <trkpt lat="42.4022" lon="12.85946">
+    <name>TP051</name>
+  </trkpt>
+  <trkpt lat="42.4022022" lon="12.859461">
+    <name>TP052</name>
+  </trkpt>
+  <trkpt lat="42.4022022" lon="12.859461">
+    <name>TP053</name>
+  </trkpt>
+  <trkpt lat="42.4024" lon="12.85943">
+    <name>TP054</name>
+  </trkpt>
+  <trkpt lat="42.40247" lon="12.85942">
+    <name>TP055</name>
+  </trkpt>
+  <trkpt lat="42.4024711" lon="12.8594175">
+    <name>TP056</name>
+  </trkpt>
+  <trkpt lat="42.40246" lon="12.85914">
+    <name>TP057</name>
+  </trkpt>
+  <trkpt lat="42.40244" lon="12.85883">
+    <name>TP058</name>
+  </trkpt>
+  <trkpt lat="42.402445" lon="12.858832">
+    <name>TP059</name>
+  </trkpt>
+  <trkpt lat="42.402445" lon="12.858832">
+    <name>TP060</name>
+  </trkpt>
+  <trkpt lat="42.40246" lon="12.85914">
+    <name>TP061</name>
+  </trkpt>
+  <trkpt lat="42.40247" lon="12.85943">
+    <name>TP062</name>
+  </trkpt>
+  <trkpt lat="42.40249" lon="12.85963">
+    <name>TP063</name>
+  </trkpt>
+  <trkpt lat="42.40249" lon="12.85974">
+    <name>TP064</name>
+  </trkpt>
+  <trkpt lat="42.40255" lon="12.86019">
+    <name>TP065</name>
+  </trkpt>
+  <trkpt lat="42.4025534" lon="12.8601888">
+    <name>TP066</name>
+  </trkpt>
+  <trkpt lat="42.40259" lon="12.86028">
+    <name>TP067</name>
+  </trkpt>
+  <trkpt lat="42.4026" lon="12.86048">
+    <name>TP068</name>
+  </trkpt>
+  <trkpt lat="42.4026" lon="12.86056">
+    <name>TP069</name>
+  </trkpt>
+  <trkpt lat="42.40259" lon="12.86093">
+    <name>TP070</name>
+  </trkpt>
+  <trkpt lat="42.4025895" lon="12.8609303">
+    <name>TP071</name>
+  </trkpt>
+  <trkpt lat="42.40251" lon="12.86097">
+    <name>TP072</name>
+  </trkpt>
+  <trkpt lat="42.402507" lon="12.8609664">
+    <name>TP073</name>
+  </trkpt>
+  <trkpt lat="42.40237" lon="12.86102">
+    <name>TP074</name>
+  </trkpt>
+  <trkpt lat="42.40216" lon="12.86109">
+    <name>TP075</name>
+  </trkpt>
+  <trkpt lat="42.40211" lon="12.8611">
+    <name>TP076</name>
+  </trkpt>
+  <trkpt lat="42.40193" lon="12.86113">
+    <name>TP077</name>
+  </trkpt>
+  <trkpt lat="42.4019346" lon="12.8611254">
+    <name>TP078</name>
+  </trkpt>
+  <trkpt lat="42.40191" lon="12.86132">
+    <name>TP079</name>
+  </trkpt>
+  <trkpt lat="42.40191" lon="12.86137">
+    <name>TP080</name>
+  </trkpt>
+  <trkpt lat="42.40191" lon="12.86151">
+    <name>TP081</name>
+  </trkpt>
+  <trkpt lat="42.40193" lon="12.86161">
+    <name>TP082</name>
+  </trkpt>
+  <trkpt lat="42.40194" lon="12.86166">
+    <name>TP083</name>
+  </trkpt>
+  <trkpt lat="42.40198" lon="12.86179">
+    <name>TP084</name>
+  </trkpt>
+  <trkpt lat="42.40199" lon="12.86187">
+    <name>TP085</name>
+  </trkpt>
+  <trkpt lat="42.40204" lon="12.86202">
+    <name>TP086</name>
+  </trkpt>
+  <trkpt lat="42.40206" lon="12.86212">
+    <name>TP087</name>
+  </trkpt>
+  <trkpt lat="42.4020622" lon="12.862122">
+    <name>TP088</name>
+  </trkpt>
+  <trkpt lat="42.4020622" lon="12.862122">
+    <name>TP089</name>
+  </trkpt>
+  <trkpt lat="42.4020622" lon="12.862122">
+    <name>TP090</name>
+  </trkpt>
+  </trkseg>
+</trk>
+</gpx>
