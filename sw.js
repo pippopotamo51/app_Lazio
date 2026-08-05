@@ -2,11 +2,11 @@ const CACHE_NAME = 'cicerone-cache-v1'; // Incrementata la versione per aggiorna
 
 // Mettiamo in cache iniziale solo i file testuali indispensabili
 const ASSETS_TO_CACHE = [
-  './Cicerone_Lazio.html', //[cite: 2]
-  './manifest.json', //[cite: 2]
-  './Leaflet/leaflet.css', //[cite: 2]
-  './Leaflet/leaflet.js' //[cite: 2]
-];
+  './Cicerone_Lazio.html',[cite: 2]
+  './manifest.json',[cite: 2]
+  './Leaflet/leaflet.css',[cite: 2]
+  './Leaflet/leaflet.js',[cite: 2]
+  './Vacanze_LAZIO.csv' // <--- Aggiungi qui il percorso co];
 
 // 1. Installazione[cite: 2]
 self.addEventListener('install', (event) => {
