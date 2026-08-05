@@ -1106,6 +1106,57 @@ function attivaMappaDaItinerario() {
         attribution: 'Mappa Offline Cicerone',
         errorTileUrl: './Leaflet/images/no-tile.png'
     }).addTo(mappaLeafletIstanza);
+// ==========================================
+// TRACCIAMENTO POSIZIONE GPS IN TEMPO REALE
+// ==========================================
+let markerPosizioneUtente = null;
+let cerchioAccuratezza = null;
+
+// Avvia la geolocalizzazione continua
+mappaLeafletIstanza.locate({
+    setView: true,             // Centra la mappa sulla posizione attuale
+    maxZoom: 16,               // Zoom massimo al centraggio
+    watch: true,               // Monitora gli spostamenti in tempo reale
+    enableHighAccuracy: true   // Richiede alta precisione (GPS)
+});
+
+  // Quando il GPS trova una nuova posizione
+mappaLeafletIstanza.on('locationfound', (e) => {
+    const raggio = e.accuracy;
+
+    // Se il marker della posizione esiste già, lo sposta (smooth movement)
+    if (markerPosizioneUtente) {
+        markerPosizioneUtente.setLatLng(e.latlng);
+        cerchioAccuratezza.setLatLng(e.latlng);
+        cerchioAccuratezza.setRadius(raggio);
+    } else {
+        // Crea il pallino blu della posizione e il cerchio di tolleranza
+        cerchioAccuratezza = L.circle(e.latlng, raggio, {
+            color: '#1e90ff',
+            fillColor: '#1e90ff',
+            fillOpacity: 0.15,
+            weight: 1
+        }).addTo(mappaLeafletIstanza);
+
+        // Icona/Pallino blu
+        const iconaUtente = L.divIcon({
+            html: '<div style="background-color: #007bff; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.8);"></div>',
+            className: 'marker-utente-gps',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+
+        markerPosizioneUtente = L.marker(e.latlng, { icon: iconaUtente })
+            .addTo(mappaLeafletIstanza)
+            .bindPopup("Sei qui");
+    }
+});
+
+// Gestione dell'errore GPS (es. se l'utente nega i permessi)
+mappaLeafletIstanza.on('locationerror', (e) => {
+    console.warn("GPS non disponibile o permesso negato:", e.message);
+});
+
 
     // 5. Disegniamo i marker delle tappe
     tappeConCoordinate.forEach(t => {
@@ -1488,12 +1539,12 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log("Tentativo di caricamento automatico dal database di GitHub...");
 
     // Non serve più un link esterno, puntiamo direttamente al file caricato nel progetto!
-    const urlDatabaseLocal = "./Cicerone_Lazio.csv";
+    const urlDatabaseLocal = "./Vacanze_LAZIO.csv";
 
     fetch(urlDatabaseLocal)
         .then(response => {
             if (!response.ok) {
-                throw new Error("Impossibile trovare il file database_unione.csv su GitHub (Stato: " + response.status + ")");
+                throw new Error("Impossibile trovare il file Vacanze_LAZIO.csv su GitHub (Stato: " + response.status + ")");
             }
             return response.text();
         })
@@ -1514,6 +1565,43 @@ window.addEventListener('DOMContentLoaded', () => {
             console.warn("Caricamento automatico fallito: ", errore);
             console.log("Usa il pulsante carica file manuale se necessario.");
         });
+// ==========================================
+// GESTIONE TAP / CLICK SU TUTTO LO SCHERMO
+// ==========================================
+document.addEventListener('click', (event) => {
+
+    // 1. Evita di attivare la pausa/ripresa se l'utente sta cliccando su tasti di navigazione (es. "Torna indietro")
+    if (event.target.closest('.btn-back')) {
+        return;
+    }
+
+    // 2. Ignora il click se l'utente sta cliccando espressamente su pulsanti specifici come "Riascolta" o "Cambia CSV"
+    if (event.target.closest('button')) {
+        const testoBtn = event.target.textContent;
+        if (testoBtn.includes('Riascolta') || testoBtn.includes('Cambia')) {
+            return;
+        }
+    }
+
+    // 3. Gestione Audio Monumento su tutto lo schermo
+    if (statoAudioMonumento === "playing") {
+        pausaAudioMonumento();
+        return;
+    } else if (statoAudioMonumento === "paused") {
+        riprendiAudioMonumento();
+        return;
+    }
+
+    // 4. Gestione Audio Opera su tutto lo schermo
+    if (statoAudioOpera === "playing") {
+        pausaAudioOpera();
+        return;
+    } else if (statoAudioOpera === "paused") {
+        riprendiAudioOpera();
+        return;
+    }
+});
+
 });
 // --------------------------------------------------------// ----------------------------------------------
 </script>
