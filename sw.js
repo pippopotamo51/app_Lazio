@@ -6,7 +6,7 @@ const ASSETS_TO_CACHE = [
   './manifest.json',[cite: 2]
   './Leaflet/leaflet.css',[cite: 2]
   './Leaflet/leaflet.js',[cite: 2]
-  './Vacanze_LAZIO.csv' // <--- Aggiungi qui il percorso co];
+  ];
 
 // 1. Installazione[cite: 2]
 self.addEventListener('install', (event) => {

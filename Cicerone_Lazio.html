@@ -1488,12 +1488,12 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log("Tentativo di caricamento automatico dal database di GitHub...");
 
     // Non serve più un link esterno, puntiamo direttamente al file caricato nel progetto!
-    const urlDatabaseLocal = "./Cicerone_Lazio.csv";
+    const urlDatabaseLocal = "./Vacanze_LAZIO.csv";
 
     fetch(urlDatabaseLocal)
         .then(response => {
             if (!response.ok) {
-                throw new Error("Impossibile trovare il file database_unione.csv su GitHub (Stato: " + response.status + ")");
+                throw new Error("Impossibile trovare il file Vacanze_LAZIO.csv su GitHub (Stato: " + response.status + ")");
             }
             return response.text();
         })
