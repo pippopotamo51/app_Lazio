@@ -1361,68 +1361,86 @@ function indietroDallAudio() {
         document.getElementById('monument-state-paused').style.display = 'none';
     }
 
-    function gestisciAudioMonumento() {
-        if (!('speechSynthesis' in window) || arrayParoleMonumento.length === 0) return;
-        statoAudioMonumento = "playing";
-        bloccoResetInPausaMonumento = false;
+   let timerSincroMonumento = null;
 
-        document.getElementById('monument-state-playing').style.display = 'block';
-        document.getElementById('monument-state-paused').style.display = 'none';
-        window.speechSynthesis.cancel();
+function gestisciAudioMonumento() {
+    if (!('speechSynthesis' in window) || arrayParoleMonumento.length === 0) return;
 
-        let indiceDiPartenza = 0;
-        if (indiceParolaCorrenteMonumento > 0) {
-            indiceDiPartenza = Math.max(0, indiceParolaCorrenteMonumento - 3);
+    if (timerSincroMonumento) clearInterval(timerSincroMonumento);
+
+    statoAudioMonumento = "playing";
+    bloccoResetInPausaMonumento = false;
+
+    document.getElementById('monument-state-playing').style.display = 'block';
+    document.getElementById('monument-state-paused').style.display = 'none';
+    
+    window.speechSynthesis.cancel();
+
+    let indiceDiPartenza = 0;
+    if (indiceParolaCorrenteMonumento > 0) {
+        indiceDiPartenza = Math.max(0, indiceParolaCorrenteMonumento - 2);
+    }
+    const offsetIniziale = indiceDiPartenza;
+
+    let testoPulito = rimuoviTagHTML(arrayParoleMonumento.slice(indiceDiPartenza).join(" "));
+    const unita = new SpeechSynthesisUtterance(testoPulito);
+    unita.lang = 'it-IT';
+    unita.rate = 0.95;
+
+    const voci = window.speechSynthesis.getVoices();
+    const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
+    if (voceMigliore) unita.voice = voceMigliore;
+
+    let tempoInizio = Date.now();
+    timerSincroMonumento = setInterval(() => {
+        if (statoAudioMonumento === "playing" && window.speechSynthesis.speaking) {
+            let paroleLetteStimate = Math.floor(((Date.now() - tempoInizio) / 1000) * 2.5);
+            let nuovaPosizione = offsetIniziale + paroleLetteStimate;
+            if (nuovaPosizione < arrayParoleMonumento.length) {
+                indiceParolaCorrenteMonumento = nuovaPosizione;
+            }
         }
-        const offsetIniziale = indiceDiPartenza;
+    }, 200);
 
-        let testoPulito = rimuoviTagHTML(arrayParoleMonumento.slice(indiceDiPartenza).join(" "));
-	const unita = new SpeechSynthesisUtterance(testoPulito);
-        unita.lang = 'it-IT';
-        unita.rate = 0.95;
-
-        const voci = window.speechSynthesis.getVoices();
-        const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || 	v.name.includes('Natural') || v.name.includes('Premium')));
-        if (voceMigliore) unita.voice = voceMigliore;
-
-        unita.onboundary = function(event) {
-        if (event.name === 'word') {
-            // Calcoliamo esattamente quante parole ci sono dall'inizio del testo
-            // fino al carattere dove si trova adesso la voce (event.charIndex)
+    unita.onboundary = function(event) {
+        if (event.name === 'word' && event.charIndex !== undefined) {
             const testoFinoAQui = testoPulito.substring(0, event.charIndex);
             const paroleLetteEffettive = testoFinoAQui.trim().split(/\s+/).filter(Boolean).length;
-            
-            // Salviamo la posizione esatta corrente
             indiceParolaCorrenteMonumento = offsetIniziale + paroleLetteEffettive;
         }
     };
 
-        unita.onend = function() {
-            if (bloccoResetInPausaMonumento) return;
-            statoAudioMonumento = "stop";
-            indiceParolaCorrenteMonumento = 0;
-            resetBottoniMonumentoNormale();
-        };
+    unita.onend = function() {
+        if (timerSincroMonumento) clearInterval(timerSincroMonumento);
+        if (bloccoResetInPausaMonumento) return;
+        statoAudioMonumento = "stop";
+        indiceParolaCorrenteMonumento = 0;
+        resetBottoniMonumentoNormale();
+    };
 
-        unita.onerror = function() {
-            if (bloccoResetInPausaMonumento) return;
-            statoAudioMonumento = "stop";
-            indiceParolaCorrenteMonumento = 0;
-            resetBottoniMonumentoNormale();
-        };
+    unita.onerror = function() {
+        if (timerSincroMonumento) clearInterval(timerSincroMonumento);
+        if (bloccoResetInPausaMonumento) return;
+        statoAudioMonumento = "stop";
+        indiceParolaCorrenteMonumento = 0;
+        resetBottoniMonumentoNormale();
+    };
 
-        window.speechSynthesis.speak(unita);
+    window.speechSynthesis.speak(unita);
+}
+
+function pausaAudioMonumento() {
+    if ('speechSynthesis' in window) {
+        bloccoResetInPausaMonumento = true;
+        statoAudioMonumento = "paused";
+        if (timerSincroMonumento) clearInterval(timerSincroMonumento);
+
+        window.speechSynthesis.cancel();
+        
+        document.getElementById('monument-state-playing').style.display = 'none';
+        document.getElementById('monument-state-paused').style.display = 'block';
     }
-
-    function pausaAudioMonumento() {
-        if ('speechSynthesis' in window) {
-            bloccoResetInPausaMonumento = true;
-            statoAudioMonumento = "paused";
-            window.speechSynthesis.cancel();
-            document.getElementById('monument-state-playing').style.display = 'none';
-            document.getElementById('monument-state-paused').style.display = 'block';
-        }
-    }
+}
 
     function riprendiAudioMonumento() {
         gestisciAudioMonumento();
@@ -1446,20 +1464,26 @@ function indietroDallAudio() {
         document.getElementById('opera-state-paused').style.display = 'none';
     }
 
-    function gestisciAudioOpera() {
+let timerSincroOpera = null;
+
+function gestisciAudioOpera() {
     if (!('speechSynthesis' in window) || arrayParoleOpera.length === 0) return;
+    
+    // Ferma eventuali timer precedenti
+    if (timerSincroOpera) clearInterval(timerSincroOpera);
+
     statoAudioOpera = "playing";
     bloccoResetInPausaOpera = false;
 
     document.getElementById('opera-state-ready').style.display = 'none';
     document.getElementById('opera-state-playing').style.display = 'block';
     document.getElementById('opera-state-paused').style.display = 'none';
+    
     window.speechSynthesis.cancel();
 
     let indiceDiPartenza = 0;
     if (indiceParolaCorrenteOpera > 0) {
-        // Torna indietro di 3 parole per riprendere il contesto con naturalezza
-        indiceDiPartenza = Math.max(0, indiceParolaCorrenteOpera - 3);
+        indiceDiPartenza = Math.max(0, indiceParolaCorrenteOpera - 2);
     }
     const offsetIniziale = indiceDiPartenza;
 
@@ -1472,9 +1496,21 @@ function indietroDallAudio() {
     const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
     if (voceMigliore) unita.voice = voceMigliore;
 
-    // NUOVO CALCOLO PRECISO PER MOBILE BASATO SUI CARATTERI EFFETTIVI
+    // Timer di backup ogni 200ms per salvare sempre la posizione anche su Android/iOS
+    let tempoInizio = Date.now();
+    timerSincroOpera = setInterval(() => {
+        if (statoAudioOpera === "playing" && window.speechSynthesis.speaking) {
+            // Stima della lettura: circa 2.5 parole al secondo (con rate 0.95)
+            let paroleLetteStimate = Math.floor(((Date.now() - tempoInizio) / 1000) * 2.5);
+            let nuovaPosizione = offsetIniziale + paroleLetteStimate;
+            if (nuovaPosizione < arrayParoleOpera.length) {
+                indiceParolaCorrenteOpera = nuovaPosizione;
+            }
+        }
+    }, 200);
+
     unita.onboundary = function(event) {
-        if (event.name === 'word') {
+        if (event.name === 'word' && event.charIndex !== undefined) {
             const testoFinoAQui = testoPulito.substring(0, event.charIndex);
             const paroleLetteEffettive = testoFinoAQui.trim().split(/\s+/).filter(Boolean).length;
             indiceParolaCorrenteOpera = offsetIniziale + paroleLetteEffettive;
@@ -1482,6 +1518,7 @@ function indietroDallAudio() {
     };
 
     unita.onend = function() {
+        if (timerSincroOpera) clearInterval(timerSincroOpera);
         if (bloccoResetInPausaOpera) return;
         statoAudioOpera = "stop";
         indiceParolaCorrenteOpera = 0;
@@ -1489,6 +1526,7 @@ function indietroDallAudio() {
     };
 
     unita.onerror = function() {
+        if (timerSincroOpera) clearInterval(timerSincroOpera);
         if (bloccoResetInPausaOpera) return;
         statoAudioOpera = "stop";
         indiceParolaCorrenteOpera = 0;
@@ -1500,17 +1538,19 @@ function indietroDallAudio() {
     });
 }
 
-    function pausaAudioOpera() {
-        if ('speechSynthesis' in window) {
-            bloccoResetInPausaOpera = true;
-            statoAudioOpera = "paused";
-            window.speechSynthesis.cancel();
-            
-            document.getElementById('opera-state-ready').style.display = 'none';
-            document.getElementById('opera-state-playing').style.display = 'none';
-            document.getElementById('opera-state-paused').style.display = 'block';
-        }
+function pausaAudioOpera() {
+    if ('speechSynthesis' in window) {
+        bloccoResetInPausaOpera = true;
+        statoAudioOpera = "paused";
+        if (timerSincroOpera) clearInterval(timerSincroOpera);
+        
+        window.speechSynthesis.cancel();
+        
+        document.getElementById('opera-state-ready').style.display = 'none';
+        document.getElementById('opera-state-playing').style.display = 'none';
+        document.getElementById('opera-state-paused').style.display = 'block';
     }
+}
 
     function riprendiAudioOpera() {
         gestisciAudioOpera();
