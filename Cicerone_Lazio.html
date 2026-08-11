@@ -1376,10 +1376,8 @@ function gestisciAudioMonumento() {
     
     window.speechSynthesis.cancel();
 
-    let indiceDiPartenza = 0;
-    if (indiceParolaCorrenteMonumento > 0) {
-        indiceDiPartenza = Math.max(0, indiceParolaCorrenteMonumento - 2);
-    }
+    // Dentro gestisciAudioMonumento():
+    let indiceDiPartenza = indiceParolaCorrenteMonumento;
     const offsetIniziale = indiceDiPartenza;
 
     let testoPulito = rimuoviTagHTML(arrayParoleMonumento.slice(indiceDiPartenza).join(" "));
@@ -1435,13 +1433,17 @@ function pausaAudioMonumento() {
         statoAudioMonumento = "paused";
         if (timerSincroMonumento) clearInterval(timerSincroMonumento);
 
+        // TORNA INDIETRO DI 3 PAROLE RISPETTO AL MOMENTO DEL TAP
+        if (indiceParolaCorrenteMonumento > 0) {
+            indiceParolaCorrenteMonumento = Math.max(0, indiceParolaCorrenteMonumento - 3);
+        }
+
         window.speechSynthesis.cancel();
         
         document.getElementById('monument-state-playing').style.display = 'none';
         document.getElementById('monument-state-paused').style.display = 'block';
     }
 }
-
     function riprendiAudioMonumento() {
         gestisciAudioMonumento();
     }
@@ -1481,10 +1483,8 @@ function gestisciAudioOpera() {
     
     window.speechSynthesis.cancel();
 
-    let indiceDiPartenza = 0;
-    if (indiceParolaCorrenteOpera > 0) {
-        indiceDiPartenza = Math.max(0, indiceParolaCorrenteOpera - 2);
-    }
+    // Dentro gestisciAudioOpera():
+    let indiceDiPartenza = indiceParolaCorrenteOpera;
     const offsetIniziale = indiceDiPartenza;
 
     let testoPulito = rimuoviTagHTML(arrayParoleOpera.slice(indiceDiPartenza).join(" "));
@@ -1543,6 +1543,11 @@ function pausaAudioOpera() {
         bloccoResetInPausaOpera = true;
         statoAudioOpera = "paused";
         if (timerSincroOpera) clearInterval(timerSincroOpera);
+
+        // TORNA INDIETRO DI 3 PAROLE RISPETTO AL MOMENTO DEL TAP
+        if (indiceParolaCorrenteOpera > 0) {
+            indiceParolaCorrenteOpera = Math.max(0, indiceParolaCorrenteOpera - 3);
+        }
         
         window.speechSynthesis.cancel();
         
