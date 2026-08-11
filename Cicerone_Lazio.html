@@ -1385,13 +1385,17 @@ function indietroDallAudio() {
         const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || 	v.name.includes('Natural') || v.name.includes('Premium')));
         if (voceMigliore) unita.voice = voceMigliore;
 
-        let paroleLetteInQuestaSessione = 0;
         unita.onboundary = function(event) {
-            if (event.name === 'word') {
-                indiceParolaCorrenteMonumento = offsetIniziale + paroleLetteInQuestaSessione;
-                paroleLetteInQuestaSessione++;
-            }
-        };
+        if (event.name === 'word') {
+            // Calcoliamo esattamente quante parole ci sono dall'inizio del testo
+            // fino al carattere dove si trova adesso la voce (event.charIndex)
+            const testoFinoAQui = testoPulito.substring(0, event.charIndex);
+            const paroleLetteEffettive = testoFinoAQui.trim().split(/\s+/).filter(Boolean).length;
+            
+            // Salviamo la posizione esatta corrente
+            indiceParolaCorrenteMonumento = offsetIniziale + paroleLetteEffettive;
+        }
+    };
 
         unita.onend = function() {
             if (bloccoResetInPausaMonumento) return;
@@ -1443,56 +1447,58 @@ function indietroDallAudio() {
     }
 
     function gestisciAudioOpera() {
-        if (!('speechSynthesis' in window) || arrayParoleOpera.length === 0) return;
-        statoAudioOpera = "playing";
-        bloccoResetInPausaOpera = false;
+    if (!('speechSynthesis' in window) || arrayParoleOpera.length === 0) return;
+    statoAudioOpera = "playing";
+    bloccoResetInPausaOpera = false;
 
-        document.getElementById('opera-state-ready').style.display = 'none';
-        document.getElementById('opera-state-playing').style.display = 'block';
-        document.getElementById('opera-state-paused').style.display = 'none';
-        window.speechSynthesis.cancel();
+    document.getElementById('opera-state-ready').style.display = 'none';
+    document.getElementById('opera-state-playing').style.display = 'block';
+    document.getElementById('opera-state-paused').style.display = 'none';
+    window.speechSynthesis.cancel();
 
-        let indiceDiPartenza = 0;
-        if (indiceParolaCorrenteOpera > 0) {
-            indiceDiPartenza = Math.max(0, indiceParolaCorrenteOpera - 3);
-        }
-        const offsetIniziale = indiceDiPartenza;
-
-        let testoPulito = rimuoviTagHTML(arrayParoleOpera.slice(indiceDiPartenza).join(" "));
-	const unita = new SpeechSynthesisUtterance(testoPulito);
-        unita.lang = 'it-IT';
-        unita.rate = 0.95;
-
-        const voci = window.speechSynthesis.getVoices();
-        const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
-        if (voceMigliore) unita.voice = voceMigliore;
-
-        let paroleLetteInQuestaSessione = 0;
-        unita.onboundary = function(event) {
-            if (event.name === 'word') {
-                indiceParolaCorrenteOpera = offsetIniziale + paroleLetteInQuestaSessione;
-                paroleLetteInQuestaSessione++;
-            }
-        };
-
-        unita.onend = function() {
-            if (bloccoResetInPausaOpera) return;
-            statoAudioOpera = "stop";
-            indiceParolaCorrenteOpera = 0;
-            resetBottoniStatoNormale();
-        };
-
-        unita.onerror = function() {
-            if (bloccoResetInPausaOpera) return;
-            statoAudioOpera = "stop";
-            indiceParolaCorrenteOpera = 0;
-            resetBottoniStatoNormale();
-        };
-
-        svegliaCasseConUltrasuono(() => {
-            window.speechSynthesis.speak(unita);
-        });
+    let indiceDiPartenza = 0;
+    if (indiceParolaCorrenteOpera > 0) {
+        // Torna indietro di 3 parole per riprendere il contesto con naturalezza
+        indiceDiPartenza = Math.max(0, indiceParolaCorrenteOpera - 3);
     }
+    const offsetIniziale = indiceDiPartenza;
+
+    let testoPulito = rimuoviTagHTML(arrayParoleOpera.slice(indiceDiPartenza).join(" "));
+    const unita = new SpeechSynthesisUtterance(testoPulito);
+    unita.lang = 'it-IT';
+    unita.rate = 0.95;
+
+    const voci = window.speechSynthesis.getVoices();
+    const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
+    if (voceMigliore) unita.voice = voceMigliore;
+
+    // NUOVO CALCOLO PRECISO PER MOBILE BASATO SUI CARATTERI EFFETTIVI
+    unita.onboundary = function(event) {
+        if (event.name === 'word') {
+            const testoFinoAQui = testoPulito.substring(0, event.charIndex);
+            const paroleLetteEffettive = testoFinoAQui.trim().split(/\s+/).filter(Boolean).length;
+            indiceParolaCorrenteOpera = offsetIniziale + paroleLetteEffettive;
+        }
+    };
+
+    unita.onend = function() {
+        if (bloccoResetInPausaOpera) return;
+        statoAudioOpera = "stop";
+        indiceParolaCorrenteOpera = 0;
+        resetBottoniStatoNormale();
+    };
+
+    unita.onerror = function() {
+        if (bloccoResetInPausaOpera) return;
+        statoAudioOpera = "stop";
+        indiceParolaCorrenteOpera = 0;
+        resetBottoniStatoNormale();
+    };
+
+    svegliaCasseConUltrasuono(() => {
+        window.speechSynthesis.speak(unita);
+    });
+}
 
     function pausaAudioOpera() {
         if ('speechSynthesis' in window) {
