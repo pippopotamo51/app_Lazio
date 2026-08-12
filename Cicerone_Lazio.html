@@ -1360,7 +1360,7 @@ function indietroDallAudio() {
         document.getElementById('monument-state-playing').style.display = 'block';
         document.getElementById('monument-state-paused').style.display = 'none';
 }
-// VARIABILI DI STATO E SINCRONIZZAZIONE
+  // VARIABILI DI STATO E SINCRONIZZAZIONE
 let timerSincroMonumento = null;
 let timerSincroOpera = null;
 
@@ -1464,6 +1464,7 @@ function resetBottoniStatoNormale() {
     document.getElementById('opera-state-playing').style.display = 'none';
     document.getElementById('opera-state-paused').style.display = 'none';
 }
+
 
 function gestisciAudioOpera() {
     if (!('speechSynthesis' in window) || arrayParoleOpera.length === 0) return;
