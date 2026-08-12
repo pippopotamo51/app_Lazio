@@ -1376,7 +1376,7 @@ function gestisciAudioMonumento() {
     
     window.speechSynthesis.cancel();
 
-    // Dentro gestisciAudioMonumento():
+    // Inizia esattamente dall'indice salvato
     let indiceDiPartenza = indiceParolaCorrenteMonumento;
     const offsetIniziale = indiceDiPartenza;
 
@@ -1389,22 +1389,18 @@ function gestisciAudioMonumento() {
     const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
     if (voceMigliore) unita.voice = voceMigliore;
 
-    let tempoInizio = Date.now();
-    timerSincroMonumento = setInterval(() => {
-        if (statoAudioMonumento === "playing" && window.speechSynthesis.speaking) {
-            let paroleLetteStimate = Math.floor(((Date.now() - tempoInizio) / 1000) * 2.5);
-            let nuovaPosizione = offsetIniziale + paroleLetteStimate;
-            if (nuovaPosizione < arrayParoleMonumento.length) {
-                indiceParolaCorrenteMonumento = nuovaPosizione;
-            }
-        }
-    }, 200);
-
+    // Tracciamento nativo preciso basato su charIndex
     unita.onboundary = function(event) {
-        if (event.name === 'word' && event.charIndex !== undefined) {
-            const testoFinoAQui = testoPulito.substring(0, event.charIndex);
-            const paroleLetteEffettive = testoFinoAQui.trim().split(/\s+/).filter(Boolean).length;
-            indiceParolaCorrenteMonumento = offsetIniziale + paroleLetteEffettive;
+        if (event.charIndex !== undefined) {
+            // Conta quante parole ci sono dall'inizio del testo letto fino al carattere corrente
+            const testoProgressivo = testoPulito.substring(0, event.charIndex);
+            const paroleLette = testoProgressivo.trim().split(/\s+/).filter(Boolean).length;
+            
+            // Aggiorna l'indice globale
+            let calcolato = offsetIniziale + paroleLette;
+            if (calcolato < arrayParoleMonumento.length) {
+                indiceParolaCorrenteMonumento = calcolato;
+            }
         }
     };
 
@@ -1431,9 +1427,10 @@ function pausaAudioMonumento() {
     if ('speechSynthesis' in window) {
         bloccoResetInPausaMonumento = true;
         statoAudioMonumento = "paused";
+        
         if (timerSincroMonumento) clearInterval(timerSincroMonumento);
 
-        // TORNA INDIETRO DI 3 PAROLE RISPETTO AL MOMENTO DEL TAP
+        // Arretra SEMPRE di 3 parole esatte al momento della pausa
         if (indiceParolaCorrenteMonumento > 0) {
             indiceParolaCorrenteMonumento = Math.max(0, indiceParolaCorrenteMonumento - 3);
         }
@@ -1444,34 +1441,34 @@ function pausaAudioMonumento() {
         document.getElementById('monument-state-paused').style.display = 'block';
     }
 }
-    function riprendiAudioMonumento() {
-        gestisciAudioMonumento();
-    }
 
-    function riavviaAudioMonumentoDaCapo() {
-        indiceParolaCorrenteMonumento = 0;
-        gestisciAudioMonumento();
-    }
+function riprendiAudioMonumento() {
+    gestisciAudioMonumento();
+}
 
-    function avviaCiceroneAI() {
-        document.getElementById('btn-attiva-ai').style.display = 'none';
-        document.getElementById('audio-controls').style.display = 'block';
-    }
+function riavviaAudioMonumentoDaCapo() {
+    indiceParolaCorrenteMonumento = 0;
+    gestisciAudioMonumento();
+}
 
-    function resetBottoniStatoNormale() {
-        document.getElementById('btn-attiva-ai').style.display = 'block';
-        document.getElementById('audio-controls').style.display = 'none';
-        document.getElementById('opera-state-ready').style.display = 'block';
-        document.getElementById('opera-state-playing').style.display = 'none';
-        document.getElementById('opera-state-paused').style.display = 'none';
-    }
+function avviaCiceroneAI() {
+    document.getElementById('btn-attiva-ai').style.display = 'none';
+    document.getElementById('audio-controls').style.display = 'block';
+}
+
+function resetBottoniStatoNormale() {
+    document.getElementById('btn-attiva-ai').style.display = 'block';
+    document.getElementById('audio-controls').style.display = 'none';
+    document.getElementById('opera-state-ready').style.display = 'block';
+    document.getElementById('opera-state-playing').style.display = 'none';
+    document.getElementById('opera-state-paused').style.display = 'none';
+}
 
 let timerSincroOpera = null;
 
 function gestisciAudioOpera() {
     if (!('speechSynthesis' in window) || arrayParoleOpera.length === 0) return;
-    
-    // Ferma eventuali timer precedenti
+
     if (timerSincroOpera) clearInterval(timerSincroOpera);
 
     statoAudioOpera = "playing";
@@ -1483,7 +1480,6 @@ function gestisciAudioOpera() {
     
     window.speechSynthesis.cancel();
 
-    // Dentro gestisciAudioOpera():
     let indiceDiPartenza = indiceParolaCorrenteOpera;
     const offsetIniziale = indiceDiPartenza;
 
@@ -1496,24 +1492,15 @@ function gestisciAudioOpera() {
     const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
     if (voceMigliore) unita.voice = voceMigliore;
 
-    // Timer di backup ogni 200ms per salvare sempre la posizione anche su Android/iOS
-    let tempoInizio = Date.now();
-    timerSincroOpera = setInterval(() => {
-        if (statoAudioOpera === "playing" && window.speechSynthesis.speaking) {
-            // Stima della lettura: circa 2.5 parole al secondo (con rate 0.95)
-            let paroleLetteStimate = Math.floor(((Date.now() - tempoInizio) / 1000) * 2.5);
-            let nuovaPosizione = offsetIniziale + paroleLetteStimate;
-            if (nuovaPosizione < arrayParoleOpera.length) {
-                indiceParolaCorrenteOpera = nuovaPosizione;
-            }
-        }
-    }, 200);
-
     unita.onboundary = function(event) {
-        if (event.name === 'word' && event.charIndex !== undefined) {
-            const testoFinoAQui = testoPulito.substring(0, event.charIndex);
-            const paroleLetteEffettive = testoFinoAQui.trim().split(/\s+/).filter(Boolean).length;
-            indiceParolaCorrenteOpera = offsetIniziale + paroleLetteEffettive;
+        if (event.charIndex !== undefined) {
+            const testoProgressivo = testoPulito.substring(0, event.charIndex);
+            const paroleLette = testoProgressivo.trim().split(/\s+/).filter(Boolean).length;
+            
+            let calcolato = offsetIniziale + paroleLette;
+            if (calcolato < arrayParoleOpera.length) {
+                indiceParolaCorrenteOpera = calcolato;
+            }
         }
     };
 
@@ -1542,9 +1529,10 @@ function pausaAudioOpera() {
     if ('speechSynthesis' in window) {
         bloccoResetInPausaOpera = true;
         statoAudioOpera = "paused";
+        
         if (timerSincroOpera) clearInterval(timerSincroOpera);
 
-        // TORNA INDIETRO DI 3 PAROLE RISPETTO AL MOMENTO DEL TAP
+        // Arretra SEMPRE di 3 parole esatte al momento della pausa
         if (indiceParolaCorrenteOpera > 0) {
             indiceParolaCorrenteOpera = Math.max(0, indiceParolaCorrenteOpera - 3);
         }
@@ -1555,9 +1543,7 @@ function pausaAudioOpera() {
         document.getElementById('opera-state-playing').style.display = 'none';
         document.getElementById('opera-state-paused').style.display = 'block';
     }
-}
-
-    function riprendiAudioOpera() {
+}    function riprendiAudioOpera() {
         gestisciAudioOpera();
     }
 
