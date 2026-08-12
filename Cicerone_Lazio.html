@@ -1360,8 +1360,9 @@ function indietroDallAudio() {
         document.getElementById('monument-state-playing').style.display = 'block';
         document.getElementById('monument-state-paused').style.display = 'none';
 }
-  let timerSincroMonumento = null;
-let tempoInizioMonumento = 0;
+// VARIABILI DI STATO E SINCRONIZZAZIONE
+let timerSincroMonumento = null;
+let timerSincroOpera = null;
 
 function gestisciAudioMonumento() {
     if (!('speechSynthesis' in window) || arrayParoleMonumento.length === 0) return;
@@ -1376,6 +1377,7 @@ function gestisciAudioMonumento() {
     
     window.speechSynthesis.cancel();
 
+    // Inizia esattamente dall'indice salvato
     let indiceDiPartenza = indiceParolaCorrenteMonumento;
     const offsetIniziale = indiceDiPartenza;
 
@@ -1388,26 +1390,14 @@ function gestisciAudioMonumento() {
     const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
     if (voceMigliore) unita.voice = voceMigliore;
 
-    tempoInizioMonumento = Date.now();
-
-    // Timer di sicurezza speciale per Android (scatta ogni 250ms)
-    timerSincroMonumento = setInterval(() => {
-        if (statoAudioMonumento === "playing" && window.speechSynthesis.speaking) {
-            // A velocità 0.95 la media è di circa 2.6 parole al secondo
-            let secondiTrascorsi = (Date.now() - tempoInizioMonumento) / 1000;
-            let paroleStimate = Math.floor(secondiTrascorsi * 2.6);
-            let calcolato = offsetIniziale + paroleStimate;
-            if (calcolato < arrayParoleMonumento.length) {
-                indiceParolaCorrenteMonumento = calcolato;
-            }
-        }
-    }, 250);
-
-    // Se il browser (es. PC/Safari) supporta onboundary, sovrascrive la stima con la precisione assoluta
+    // Tracciamento nativo preciso basato su charIndex
     unita.onboundary = function(event) {
         if (event.charIndex !== undefined) {
+            // Conta quante parole ci sono dall'inizio del testo letto fino al carattere corrente
             const testoProgressivo = testoPulito.substring(0, event.charIndex);
             const paroleLette = testoProgressivo.trim().split(/\s+/).filter(Boolean).length;
+            
+            // Aggiorna l'indice globale
             let calcolato = offsetIniziale + paroleLette;
             if (calcolato < arrayParoleMonumento.length) {
                 indiceParolaCorrenteMonumento = calcolato;
@@ -1441,7 +1431,7 @@ function pausaAudioMonumento() {
         
         if (timerSincroMonumento) clearInterval(timerSincroMonumento);
 
-        // Torna indietro di 3 parole rispetto a dove si trovava il contatore
+        // Arretra SEMPRE di 3 parole esatte al momento della pausa
         if (indiceParolaCorrenteMonumento > 0) {
             indiceParolaCorrenteMonumento = Math.max(0, indiceParolaCorrenteMonumento - 3);
         }
@@ -1475,9 +1465,6 @@ function resetBottoniStatoNormale() {
     document.getElementById('opera-state-paused').style.display = 'none';
 }
 
-let timerSincroOpera = null;
-let tempoInizioOpera = 0;
-
 function gestisciAudioOpera() {
     if (!('speechSynthesis' in window) || arrayParoleOpera.length === 0) return;
 
@@ -1504,23 +1491,11 @@ function gestisciAudioOpera() {
     const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
     if (voceMigliore) unita.voice = voceMigliore;
 
-    tempoInizioOpera = Date.now();
-
-    timerSincroOpera = setInterval(() => {
-        if (statoAudioOpera === "playing" && window.speechSynthesis.speaking) {
-            let secondiTrascorsi = (Date.now() - tempoInizioOpera) / 1000;
-            let paroleStimate = Math.floor(secondiTrascorsi * 2.6);
-            let calcolato = offsetIniziale + paroleStimate;
-            if (calcolato < arrayParoleOpera.length) {
-                indiceParolaCorrenteOpera = calcolato;
-            }
-        }
-    }, 250);
-
     unita.onboundary = function(event) {
         if (event.charIndex !== undefined) {
             const testoProgressivo = testoPulito.substring(0, event.charIndex);
             const paroleLette = testoProgressivo.trim().split(/\s+/).filter(Boolean).length;
+            
             let calcolato = offsetIniziale + paroleLette;
             if (calcolato < arrayParoleOpera.length) {
                 indiceParolaCorrenteOpera = calcolato;
@@ -1556,6 +1531,7 @@ function pausaAudioOpera() {
         
         if (timerSincroOpera) clearInterval(timerSincroOpera);
 
+        // Arretra SEMPRE di 3 parole esatte al momento della pausa
         if (indiceParolaCorrenteOpera > 0) {
             indiceParolaCorrenteOpera = Math.max(0, indiceParolaCorrenteOpera - 3);
         }
@@ -1566,8 +1542,7 @@ function pausaAudioOpera() {
         document.getElementById('opera-state-playing').style.display = 'none';
         document.getElementById('opera-state-paused').style.display = 'block';
     }
-}  
-
+}
 function riprendiAudioOpera() {
         gestisciAudioOpera();
     }
