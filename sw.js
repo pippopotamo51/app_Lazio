@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cicerone-cache-v4'; // Incrementata la versione per aggiornare la cache sui dispositivi
+const CACHE_NAME = 'cicerone-cache-v1'; // Incrementata la versione per aggiornare la cache sui dispositivi
 
 // Mettiamo in cache iniziale solo i file testuali indispensabili
 const ASSETS_TO_CACHE = [
