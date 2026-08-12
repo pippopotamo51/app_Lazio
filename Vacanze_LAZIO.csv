@@ -81,7 +81,7 @@ Conca reatina;2,1,1,3;Opera;2,1,1;Il Sacro Speco;;"Il Sacro Speco
 Per una ripida scalinata si giunge al Sacro Speco, dove s. Francesco ricevette, se­condo la tradizione, la Regola dei Frati Minori.
 Ci si trova davanti alla Cappella di s. Mi­chele, l’Arcangelo tanto venerato dal Santo. Continuando la discesa, si entra in una fenditura della roccia dove s. Francesco si im­mergeva nella intimità con Dio. Risalendo, arriviamo al luogo del leccio do­ve, secondo la tradizione, apparve Nostro Si­gnore per confermare la Regola.";;immagini/conca_colombo_speco.webp;Dettaglio;;;
 Conca reatina;2,1,1,4;Opera;2,1,1;Il Chiostro;;"Il Chiostro
-Esso si mostra irregolare nella forma: collega infatti i vari ambienti della vita comunitaria dei frati, ambienti sviluppatisi in epoche diverse. Sul lato più alto della costruzione riconosciamo una sezione lasciata a pietre a “facciavista”: si tratta dell’antica casa colonica che s. Francesco trovò sul Monte Rainiero, insieme alla cappella della Madonna e al Romitorio.";;immagini/conca_colombo_speco.webp;Dettaglio;;;
+Esso si mostra irregolare nella forma: collega infatti i vari ambienti della vita comunitaria dei frati, ambienti sviluppatisi in epoche diverse. Sul lato più alto della costruzione riconosciamo una sezione lasciata a pietre a “facciavista”: si tratta dell’antica casa colonica che s. Francesco trovò sul Monte Rainiero, insieme alla cappella della Madonna e al Romitorio.";;immagini/conca_colombo_chiostro.webp;Dettaglio;;;
 Conca reatina;2,2;Paese;2;2.Cottanello;;Arroccato su una collina ricca di olivi e circondato da un panorama verdeggiante, Cottanello conserva ancora l’aspetto di un antico borgo medievale. La Porta del Regno, ricostruita nel 1572, accoglie ancora oggi chi entra e s’inoltra tra i vicoli stretti che conducono fin sopra la bella piazzetta con la Chiesa parrocchiale di Sant’Andrea Apostolo, patrono di Cottanello.;;immagini/conca_cottanello.webp;Principale;42,404611;12,684139;mappe-offline/conca_reatina
 Conca reatina;INF2,2;Info / Contatto;2,2;Cottanello;PRENOTAZIONE OBBLIGATORIA;"📍 Indirizzo:Via Umberto I, 5<br>📞 Telefono:+39 0746.66.122 | 0746.66.129 | 348.32.91.022 br>🕒 domenica mattina dalle 9.30 alle 12.00
 È comunque possibile telefonare per concordare altri orari di visita<br>🌐";;;Info / Contatto;;;
@@ -1656,7 +1656,12 @@ Circeo;8,4;Paese;8;Lago dei Monaci;;"Il Lago dei Monaci (noto anche come Lago di
 
 Con un'estensione di circa 0,9 km², è protetto come Zona Umida di Importanza Internazionale (Convenzione di Ramsar) per l'elevatissimo valore naturalistico ed ecologico.
 
-Descrizione del Paesaggio e dell'Ambiente:<br>
+";;Immagini/circeo_monaci_illago.webp;Principale;41,378056;12,930556;mappe-offline/Circeo
+Circeo;INF8,4;Info / Contatto;8,4;Lago dei Monaci;;"📍 Indirizzo: canale/porto canale di Rio Martino.<br>📞 Telefono: <br>🕒 Orari:i sentieri ciclopedonali attorno al lago sono liberamente accessibili 24 ore su 24, tutti i giorni dell'anno
+Ingresso: Gratuito per la passeggiata lungo le sponde del lago
+ .<br>🌐 Sito web:www.parcocirceo.it
+<br>🅿️Rio Martino (lato sud di Strada Interrotta / Lungomare di Latina";;;Info/Contatto;;;
+Circeo;8,4,1;Monumento;8,4;Il lago;;"Descrizione del Paesaggio e dell'Ambiente:<br>
 
 Il lago occupa un bacino costiero separato dal Mar Tirreno da un sottile ma rigoglioso cordone dunale. È situato tra la foce del porto canale di Rio Martino a nord e l'area della Bufalara a sud.<br>
 
@@ -1685,12 +1690,8 @@ Zona della Bufalara: Pascoli adiacenti con mandrie di bufale allo stato semi-bra
 Info Pratiche
 Attrezzatura consigliata: Binocolo, scarpe da ginnastica/trekking leggero, scorta d'acqua e cappello per il sole.
 
-Accesso: Libero, gratuito e aperto 24 ore su 24 (consigliate le ore diurne).";;Immagini/circeo_monaci.webp;Principale;41,378056;12,930556;mappe-offline/Circeo
-Circeo;INF8,4;Info / Contatto;8,4;Lago dei Monaci;;"📍 Indirizzo: canale/porto canale di Rio Martino.<br>📞 Telefono: <br>🕒 Orari:i sentieri ciclopedonali attorno al lago sono liberamente accessibili 24 ore su 24, tutti i giorni dell'anno
-Ingresso: Gratuito per la passeggiata lungo le sponde del lago
- .<br>🌐 Sito web:www.parcocirceo.it
-<br>🅿️Rio Martino (lato sud di Strada Interrotta / Lungomare di Latina";;;Info/Contatto;;;
-Circeo;8,4,1;Monumento;8,4;Anello Lago dei Monaci;;"L'escursione circolare La Bufalara e il Lago dei Monaci è un percorso di trekking di difficoltà moderata che si estende per 9,0 km all'interno del Parco Nazionale del Circeo. Con un dislivello minimo di soli 12 metri, si tratta di un itinerario relativamente pianeggiante. Prevedete di completare questo anello panoramico in circa 2 ore e 15 minuti.
+Accesso: Libero, gratuito e aperto 24 ore su 24 (consigliate le ore diurne).";;Immagini/circeo_monaci.webp;Dettaglio;;;
+Circeo;8,4,1,1;Opera;8,4,1;Anello Lago dei Monaci;;"L'escursione circolare La Bufalara e il Lago dei Monaci è un percorso di trekking di difficoltà moderata che si estende per 9,0 km all'interno del Parco Nazionale del Circeo. Con un dislivello minimo di soli 12 metri, si tratta di un itinerario relativamente pianeggiante. Prevedete di completare questo anello panoramico in circa 2 ore e 15 minuti.
 Cosa aspettarsi dall'escursione circolare La Bufalara e il Lago dei Monaci:
 Su questo sentiero, vivrete un paesaggio costiero unico dove l'ingegneria umana incontra la bellezza naturale. Camminerete lungo il Canale della Bufalara, un'opera artificiale che contribuisce a gestire le acque salmastre del Lago dei Monaci, creando uno sfondo naturale distintivo. Il percorso include anche tratti di un'antica strada costiera, ora trasformata in sentiero pedonale a causa dell'erosione marina, offrendo scorci interessanti sulla costa in continua evoluzione e sull'interazione tra terra e mare. Incontrerete scenari vari, da sezioni naturali e non asfaltate a tratti pavimentati e asfaltati.
 Dettagli del percorso
