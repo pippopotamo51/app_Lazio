@@ -490,7 +490,11 @@
 <script>
     let database = []; 
     let testoAudioAttuale = "";
-    let audioCtx = null;
+// --- INCOLLA QUI LA FUNZIONE DI PULIZIA ---
+    function rimuoviTagHTML(testo) {
+        if (!testo) return "";
+        return testo.replace(/<[^>]*>/g, ' ');
+    }    let audioCtx = null;
 
     let idTappaCorrente = null;
     let idPaeseCorrente = null; 
@@ -1106,57 +1110,6 @@ function attivaMappaDaItinerario() {
         attribution: 'Mappa Offline Cicerone',
         errorTileUrl: './Leaflet/images/no-tile.png'
     }).addTo(mappaLeafletIstanza);
-// ==========================================
-// TRACCIAMENTO POSIZIONE GPS IN TEMPO REALE
-// ==========================================
-let markerPosizioneUtente = null;
-let cerchioAccuratezza = null;
-
-// Avvia la geolocalizzazione continua
-mappaLeafletIstanza.locate({
-    setView: true,             // Centra la mappa sulla posizione attuale
-    maxZoom: 16,               // Zoom massimo al centraggio
-    watch: true,               // Monitora gli spostamenti in tempo reale
-    enableHighAccuracy: true   // Richiede alta precisione (GPS)
-});
-
-  // Quando il GPS trova una nuova posizione
-mappaLeafletIstanza.on('locationfound', (e) => {
-    const raggio = e.accuracy;
-
-    // Se il marker della posizione esiste già, lo sposta (smooth movement)
-    if (markerPosizioneUtente) {
-        markerPosizioneUtente.setLatLng(e.latlng);
-        cerchioAccuratezza.setLatLng(e.latlng);
-        cerchioAccuratezza.setRadius(raggio);
-    } else {
-        // Crea il pallino blu della posizione e il cerchio di tolleranza
-        cerchioAccuratezza = L.circle(e.latlng, raggio, {
-            color: '#1e90ff',
-            fillColor: '#1e90ff',
-            fillOpacity: 0.15,
-            weight: 1
-        }).addTo(mappaLeafletIstanza);
-
-        // Icona/Pallino blu
-        const iconaUtente = L.divIcon({
-            html: '<div style="background-color: #007bff; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.8);"></div>',
-            className: 'marker-utente-gps',
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
-        });
-
-        markerPosizioneUtente = L.marker(e.latlng, { icon: iconaUtente })
-            .addTo(mappaLeafletIstanza)
-            .bindPopup("Sei qui");
-    }
-});
-
-// Gestione dell'errore GPS (es. se l'utente nega i permessi)
-mappaLeafletIstanza.on('locationerror', (e) => {
-    console.warn("GPS non disponibile o permesso negato:", e.message);
-});
-
 
     // 5. Disegniamo i marker delle tappe
     tappeConCoordinate.forEach(t => {
@@ -1169,59 +1122,98 @@ mappaLeafletIstanza.on('locationerror', (e) => {
         }
     });
 
-    // ==========================================
-    // NUOVA LOGICA: CARICAMENTO TRACCIA GEOJSON
-// ==========================================
-if (itinerarioSelezionato && itinerarioSelezionato.trim() !== "") {
-    // Rimuoviamo la traccia precedente se esiste già sulla mappa
-    if (window.currentGeoJsonLayer) {
-        mappaLeafletIstanza.removeLayer(window.currentGeoJsonLayer);
+    // 6. CARICAMENTO TRACCIA GEOJSON
+    if (itinerarioSelezionato && itinerarioSelezionato.trim() !== "") {
+        if (window.currentGeoJsonLayer) {
+            mappaLeafletIstanza.removeLayer(window.currentGeoJsonLayer);
+        }
+
+        const urlGeoJSON = `./itinerari_geojson/${itinerarioSelezionato.trim()}.geojson`;
+
+        fetch(urlGeoJSON)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Nessun file GeoJSON trovato per questo itinerario.");
+                }
+                return response.json();
+            })
+            .then(datiGeoJSON => {
+                const stileTraccia = {
+                    "color": "#ff0000",  // Colore rosso
+                    "weight": 1.5,         // Spessore ben visibile
+                    "opacity": 0.95
+                };
+
+                window.currentGeoJsonLayer = L.geoJSON(datiGeoJSON, {
+                    style: stileTraccia,
+                    pane: 'overlayPane' 
+                }).addTo(mappaLeafletIstanza);
+
+                if (window.currentGeoJsonLayer.getBounds().isValid()) {
+                    mappaLeafletIstanza.fitBounds(window.currentGeoJsonLayer.getBounds(), {
+                        padding: [20, 20]
+                    });
+                }
+            })
+            .catch(errore => {
+                console.log("Info GeoJSON:", errore.message);
+            });
     }
 
-    // Costruiamo il percorso relativo per il file GeoJSON
-    const urlGeoJSON = `./itinerari_geojson/${itinerarioSelezionato.trim()}.geojson`;
+    // 7. TRACCIAMENTO POSIZIONE GPS IN TEMPO REALE (Senza rubare il focus al GeoJSON)
+    let markerPosizioneUtente = null;
+    let cerchioAccuratezza = null;
 
-    fetch(urlGeoJSON)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Nessun file GeoJSON trovato per questo itinerario.");
-            }
-            return response.json();
-        })
-        .then(datiGeoJSON => {
-            console.log(`Traccia GeoJSON caricata con successo per: ${itinerarioSelezionato}`);
-            
-            // Opzioni di stile per la linea della traccia
-            const stileTraccia = {
-                "color": "#da70d6",  // Colore orchidea
-                "weight": 2,         // sottile
-                "opacity": 0.9       // Più opaco
-            };
+    mappaLeafletIstanza.locate({
+        setView: false,
+	maxZoom: 16,   // FONDAMENTALE: impedisce di nascondere la traccia GeoJSON
+        watch: true,               // Monitora gli spostamenti in tempo reale
+        enableHighAccuracy: true   // Richiede alta precisione (GPS)
+    });
 
-            // Creiamo il layer e salviamo il riferimento in una variabile globale/di window
-            window.currentGeoJsonLayer = L.geoJSON(datiGeoJSON, {
-                style: stileTraccia,
-                // Forza Leaflet a posizionare il GeoJSON nel pannello degli overlay (sopra le mappe)
-                pane: 'overlayPane' 
+    mappaLeafletIstanza.on('locationfound', (e) => {
+        const raggio = e.accuracy;
+
+        if (markerPosizioneUtente) {
+            markerPosizioneUtente.setLatLng(e.latlng);
+            cerchioAccuratezza.setLatLng(e.latlng);
+            cerchioAccuratezza.setRadius(raggio);
+        } else {
+            cerchioAccuratezza = L.circle(e.latlng, raggio, {
+                color: '#1e90ff',
+                fillColor: '#1e90ff',
+                fillOpacity: 0.15,
+                weight: 1
             }).addTo(mappaLeafletIstanza);
 
-            // AUTO-ZOOM: Centra la mappa e adatta l'inquadratura sull'intera traccia
-            if (window.currentGeoJsonLayer.getBounds().isValid()) {
-                mappaLeafletIstanza.fitBounds(window.currentGeoJsonLayer.getBounds(), {
-                    padding: [20, 20] // Lascia un po' di margine ai bordi dello schermo
-                });
-            }
-        })
-        .catch(errore => {
-            console.log("Info GeoJSON:", errore.message);
-        });
+            const iconaUtente = L.divIcon({
+                html: '<div style="background-color: #007bff; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.8);"></div>',
+                className: 'marker-utente-gps',
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            });
+
+            markerPosizioneUtente = L.marker(e.latlng, { icon: iconaUtente })
+                .addTo(mappaLeafletIstanza)
+                .bindPopup("Sei qui");
+        }
+    });
+
+    mappaLeafletIstanza.on('locationerror', (e) => {
+        console.warn("GPS non disponibile o permesso negato:", e.message);
+    });
+
+    setTimeout(() => {
+    if (mappaLeafletIstanza) {
+        mappaLeafletIstanza.invalidateSize();
+    }
+	}, 150);
 }
 // ==========================================
 
     setTimeout(() => {
         mappaLeafletIstanza.invalidateSize();
     }, 150);
-}
     function inizializzaMappaCoordinate(lat, lng, titoloMonumento, nomeCartella) {
         const mapBox = document.getElementById('map-view-box');
         mapBox.style.display = "block";
@@ -1369,65 +1361,89 @@ function indietroDallAudio() {
         document.getElementById('monument-state-paused').style.display = 'none';
     }
 
-    function gestisciAudioMonumento() {
-        if (!('speechSynthesis' in window) || arrayParoleMonumento.length === 0) return;
-        statoAudioMonumento = "playing";
-        bloccoResetInPausaMonumento = false;
+   let timerSincroMonumento = null;
 
-        document.getElementById('monument-state-playing').style.display = 'block';
-        document.getElementById('monument-state-paused').style.display = 'none';
-        window.speechSynthesis.cancel();
+function gestisciAudioMonumento() {
+    if (!('speechSynthesis' in window) || arrayParoleMonumento.length === 0) return;
 
-        let indiceDiPartenza = 0;
-        if (indiceParolaCorrenteMonumento > 0) {
-            indiceDiPartenza = Math.max(0, indiceParolaCorrenteMonumento - 3);
-        }
-        const offsetIniziale = indiceDiPartenza;
+    if (timerSincroMonumento) clearInterval(timerSincroMonumento);
 
-        const stringaDaLeggere = arrayParoleMonumento.slice(indiceDiPartenza).join(" ");
-        const unita = new SpeechSynthesisUtterance(stringaDaLeggere);
-        unita.lang = 'it-IT';
-        unita.rate = 0.95;
+    statoAudioMonumento = "playing";
+    bloccoResetInPausaMonumento = false;
 
-        const voci = window.speechSynthesis.getVoices();
-        const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
-        if (voceMigliore) unita.voice = voceMigliore;
+    document.getElementById('monument-state-playing').style.display = 'block';
+    document.getElementById('monument-state-paused').style.display = 'none';
+    
+    window.speechSynthesis.cancel();
 
-        let paroleLetteInQuestaSessione = 0;
-        unita.onboundary = function(event) {
-            if (event.name === 'word') {
-                indiceParolaCorrenteMonumento = offsetIniziale + paroleLetteInQuestaSessione;
-                paroleLetteInQuestaSessione++;
+    // Dentro gestisciAudioMonumento():
+    let indiceDiPartenza = indiceParolaCorrenteMonumento;
+    const offsetIniziale = indiceDiPartenza;
+
+    let testoPulito = rimuoviTagHTML(arrayParoleMonumento.slice(indiceDiPartenza).join(" "));
+    const unita = new SpeechSynthesisUtterance(testoPulito);
+    unita.lang = 'it-IT';
+    unita.rate = 0.95;
+
+    const voci = window.speechSynthesis.getVoices();
+    const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
+    if (voceMigliore) unita.voice = voceMigliore;
+
+    let tempoInizio = Date.now();
+    timerSincroMonumento = setInterval(() => {
+        if (statoAudioMonumento === "playing" && window.speechSynthesis.speaking) {
+            let paroleLetteStimate = Math.floor(((Date.now() - tempoInizio) / 1000) * 2.5);
+            let nuovaPosizione = offsetIniziale + paroleLetteStimate;
+            if (nuovaPosizione < arrayParoleMonumento.length) {
+                indiceParolaCorrenteMonumento = nuovaPosizione;
             }
-        };
-
-        unita.onend = function() {
-            if (bloccoResetInPausaMonumento) return;
-            statoAudioMonumento = "stop";
-            indiceParolaCorrenteMonumento = 0;
-            resetBottoniMonumentoNormale();
-        };
-
-        unita.onerror = function() {
-            if (bloccoResetInPausaMonumento) return;
-            statoAudioMonumento = "stop";
-            indiceParolaCorrenteMonumento = 0;
-            resetBottoniMonumentoNormale();
-        };
-
-        window.speechSynthesis.speak(unita);
-    }
-
-    function pausaAudioMonumento() {
-        if ('speechSynthesis' in window) {
-            bloccoResetInPausaMonumento = true;
-            statoAudioMonumento = "paused";
-            window.speechSynthesis.cancel();
-            document.getElementById('monument-state-playing').style.display = 'none';
-            document.getElementById('monument-state-paused').style.display = 'block';
         }
-    }
+    }, 200);
 
+    unita.onboundary = function(event) {
+        if (event.name === 'word' && event.charIndex !== undefined) {
+            const testoFinoAQui = testoPulito.substring(0, event.charIndex);
+            const paroleLetteEffettive = testoFinoAQui.trim().split(/\s+/).filter(Boolean).length;
+            indiceParolaCorrenteMonumento = offsetIniziale + paroleLetteEffettive;
+        }
+    };
+
+    unita.onend = function() {
+        if (timerSincroMonumento) clearInterval(timerSincroMonumento);
+        if (bloccoResetInPausaMonumento) return;
+        statoAudioMonumento = "stop";
+        indiceParolaCorrenteMonumento = 0;
+        resetBottoniMonumentoNormale();
+    };
+
+    unita.onerror = function() {
+        if (timerSincroMonumento) clearInterval(timerSincroMonumento);
+        if (bloccoResetInPausaMonumento) return;
+        statoAudioMonumento = "stop";
+        indiceParolaCorrenteMonumento = 0;
+        resetBottoniMonumentoNormale();
+    };
+
+    window.speechSynthesis.speak(unita);
+}
+
+function pausaAudioMonumento() {
+    if ('speechSynthesis' in window) {
+        bloccoResetInPausaMonumento = true;
+        statoAudioMonumento = "paused";
+        if (timerSincroMonumento) clearInterval(timerSincroMonumento);
+
+        // TORNA INDIETRO DI 3 PAROLE RISPETTO AL MOMENTO DEL TAP
+        if (indiceParolaCorrenteMonumento > 0) {
+            indiceParolaCorrenteMonumento = Math.max(0, indiceParolaCorrenteMonumento - 3);
+        }
+
+        window.speechSynthesis.cancel();
+        
+        document.getElementById('monument-state-playing').style.display = 'none';
+        document.getElementById('monument-state-paused').style.display = 'block';
+    }
+}
     function riprendiAudioMonumento() {
         gestisciAudioMonumento();
     }
@@ -1450,69 +1466,96 @@ function indietroDallAudio() {
         document.getElementById('opera-state-paused').style.display = 'none';
     }
 
-    function gestisciAudioOpera() {
-        if (!('speechSynthesis' in window) || arrayParoleOpera.length === 0) return;
-        statoAudioOpera = "playing";
-        bloccoResetInPausaOpera = false;
+let timerSincroOpera = null;
 
-        document.getElementById('opera-state-ready').style.display = 'none';
-        document.getElementById('opera-state-playing').style.display = 'block';
-        document.getElementById('opera-state-paused').style.display = 'none';
-        window.speechSynthesis.cancel();
+function gestisciAudioOpera() {
+    if (!('speechSynthesis' in window) || arrayParoleOpera.length === 0) return;
+    
+    // Ferma eventuali timer precedenti
+    if (timerSincroOpera) clearInterval(timerSincroOpera);
 
-        let indiceDiPartenza = 0;
+    statoAudioOpera = "playing";
+    bloccoResetInPausaOpera = false;
+
+    document.getElementById('opera-state-ready').style.display = 'none';
+    document.getElementById('opera-state-playing').style.display = 'block';
+    document.getElementById('opera-state-paused').style.display = 'none';
+    
+    window.speechSynthesis.cancel();
+
+    // Dentro gestisciAudioOpera():
+    let indiceDiPartenza = indiceParolaCorrenteOpera;
+    const offsetIniziale = indiceDiPartenza;
+
+    let testoPulito = rimuoviTagHTML(arrayParoleOpera.slice(indiceDiPartenza).join(" "));
+    const unita = new SpeechSynthesisUtterance(testoPulito);
+    unita.lang = 'it-IT';
+    unita.rate = 0.95;
+
+    const voci = window.speechSynthesis.getVoices();
+    const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
+    if (voceMigliore) unita.voice = voceMigliore;
+
+    // Timer di backup ogni 200ms per salvare sempre la posizione anche su Android/iOS
+    let tempoInizio = Date.now();
+    timerSincroOpera = setInterval(() => {
+        if (statoAudioOpera === "playing" && window.speechSynthesis.speaking) {
+            // Stima della lettura: circa 2.5 parole al secondo (con rate 0.95)
+            let paroleLetteStimate = Math.floor(((Date.now() - tempoInizio) / 1000) * 2.5);
+            let nuovaPosizione = offsetIniziale + paroleLetteStimate;
+            if (nuovaPosizione < arrayParoleOpera.length) {
+                indiceParolaCorrenteOpera = nuovaPosizione;
+            }
+        }
+    }, 200);
+
+    unita.onboundary = function(event) {
+        if (event.name === 'word' && event.charIndex !== undefined) {
+            const testoFinoAQui = testoPulito.substring(0, event.charIndex);
+            const paroleLetteEffettive = testoFinoAQui.trim().split(/\s+/).filter(Boolean).length;
+            indiceParolaCorrenteOpera = offsetIniziale + paroleLetteEffettive;
+        }
+    };
+
+    unita.onend = function() {
+        if (timerSincroOpera) clearInterval(timerSincroOpera);
+        if (bloccoResetInPausaOpera) return;
+        statoAudioOpera = "stop";
+        indiceParolaCorrenteOpera = 0;
+        resetBottoniStatoNormale();
+    };
+
+    unita.onerror = function() {
+        if (timerSincroOpera) clearInterval(timerSincroOpera);
+        if (bloccoResetInPausaOpera) return;
+        statoAudioOpera = "stop";
+        indiceParolaCorrenteOpera = 0;
+        resetBottoniStatoNormale();
+    };
+
+    svegliaCasseConUltrasuono(() => {
+        window.speechSynthesis.speak(unita);
+    });
+}
+
+function pausaAudioOpera() {
+    if ('speechSynthesis' in window) {
+        bloccoResetInPausaOpera = true;
+        statoAudioOpera = "paused";
+        if (timerSincroOpera) clearInterval(timerSincroOpera);
+
+        // TORNA INDIETRO DI 3 PAROLE RISPETTO AL MOMENTO DEL TAP
         if (indiceParolaCorrenteOpera > 0) {
-            indiceDiPartenza = Math.max(0, indiceParolaCorrenteOpera - 3);
+            indiceParolaCorrenteOpera = Math.max(0, indiceParolaCorrenteOpera - 3);
         }
-        const offsetIniziale = indiceDiPartenza;
-
-        const stringaDaLeggere = arrayParoleOpera.slice(indiceDiPartenza).join(" ");
-        const unita = new SpeechSynthesisUtterance(stringaDaLeggere);
-        unita.lang = 'it-IT';
-        unita.rate = 0.95;
-
-        const voci = window.speechSynthesis.getVoices();
-        const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
-        if (voceMigliore) unita.voice = voceMigliore;
-
-  let paroleLetteInQuestaSessione = 0;
-unita.onboundary = function(event) {
-    if (event.name === 'word') {
-        indiceParolaCorrenteOpera = offsetIniziale + paroleLetteInQuestaSessione;
-        paroleLetteInQuestaSessione++;
+        
+        window.speechSynthesis.cancel();
+        
+        document.getElementById('opera-state-ready').style.display = 'none';
+        document.getElementById('opera-state-playing').style.display = 'none';
+        document.getElementById('opera-state-paused').style.display = 'block';
     }
-};
-
-        unita.onend = function() {
-            if (bloccoResetInPausaOpera) return;
-            statoAudioOpera = "stop";
-            indiceParolaCorrenteOpera = 0;
-            resetBottoniStatoNormale();
-        };
-
-        unita.onerror = function() {
-            if (bloccoResetInPausaOpera) return;
-            statoAudioOpera = "stop";
-            indiceParolaCorrenteOpera = 0;
-            resetBottoniStatoNormale();
-        };
-
-        svegliaCasseConUltrasuono(() => {
-            window.speechSynthesis.speak(unita);
-        });
-    }
-
-    function pausaAudioOpera() {
-        if ('speechSynthesis' in window) {
-            bloccoResetInPausaOpera = true;
-            statoAudioOpera = "paused";
-            window.speechSynthesis.cancel();
-            
-            document.getElementById('opera-state-ready').style.display = 'none';
-            document.getElementById('opera-state-playing').style.display = 'none';
-            document.getElementById('opera-state-paused').style.display = 'block';
-        }
-    }
+}
 
     function riprendiAudioOpera() {
         gestisciAudioOpera();
@@ -1566,24 +1609,20 @@ window.addEventListener('DOMContentLoaded', () => {
             console.log("Usa il pulsante carica file manuale se necessario.");
         });
 // ==========================================
-// GESTIONE TAP / CLICK SU TUTTO LO SCHERMO
+// GESTIONE TAP / CLICK SU TUTTO LO SCHERMO (CORRETTO)
 // ==========================================
 document.addEventListener('click', (event) => {
 
-    // 1. Evita di attivare la pausa/ripresa se l'utente sta cliccando su tasti di navigazione (es. "Torna indietro")
-    if (event.target.closest('.btn-back')) {
+    // 1. Ignora il tap se si sta cliccando su un pulsante, un link o una card di selezione
+    if (event.target.closest('button') || 
+        event.target.closest('.card') || 
+        event.target.closest('.btn-back') ||
+        event.target.closest('select') ||
+        event.target.closest('input')) {
         return;
     }
 
-    // 2. Ignora il click se l'utente sta cliccando espressamente su pulsanti specifici come "Riascolta" o "Cambia CSV"
-    if (event.target.closest('button')) {
-        const testoBtn = event.target.textContent;
-        if (testoBtn.includes('Riascolta') || testoBtn.includes('Cambia')) {
-            return;
-        }
-    }
-
-    // 3. Gestione Audio Monumento su tutto lo schermo
+    // 2. Gestione Audio Monumento (solo se già avviato)
     if (statoAudioMonumento === "playing") {
         pausaAudioMonumento();
         return;
@@ -1592,7 +1631,7 @@ document.addEventListener('click', (event) => {
         return;
     }
 
-    // 4. Gestione Audio Opera su tutto lo schermo
+    // 3. Gestione Audio Opera (solo se già avviato)
     if (statoAudioOpera === "playing") {
         pausaAudioOpera();
         return;
