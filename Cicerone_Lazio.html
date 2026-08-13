@@ -1475,18 +1475,11 @@ function indietroDallAudio() {
         const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
         if (voceMigliore) unita.voice = voceMigliore;
 
-       let paroleLetteInQuestaSessione = 0;
-
+  let paroleLetteInQuestaSessione = 0;
 unita.onboundary = function(event) {
-    if (event.name === 'word' && event.charIndex !== undefined) {
-        const testoFinoAQui = stringaDaLeggere.substring(0, event.charIndex);
-        const paroleLetteEffettive = testoFinoAQui.trim()
-            .split(/\s+/)
-            .filter(Boolean)
-            .length;
-
-        indiceParolaCorrenteOpera =
-            offsetIniziale + paroleLetteEffettive;
+    if (event.name === 'word') {
+        indiceParolaCorrenteOpera = offsetIniziale + paroleLetteInQuestaSessione;
+        paroleLetteInQuestaSessione++;
     }
 };
 
