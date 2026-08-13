@@ -490,6 +490,34 @@
 <script>
     let database = []; 
     let testoAudioAttuale = "";
+  // Divide un testo in frasi mantenendo la punteggiatura.
+    // Le frasi troppo corte (< 3 parole) vengono unite alla successiva per naturalezza.
+    function splittaInFrasi(testo) {
+        if (!testo) return [];
+        const pulito = rimuoviTagHTML(testo).replace(/\s+/g, ' ').trim();
+        if (!pulito) return [];
+        const raw = pulito.match(/[^.!?;]+[.!?;]+|\S[^.!?;]*$/g);
+        if (!raw) return [pulito];
+        const result = [];
+        let buffer = "";
+        raw.forEach(f => {
+            const t = f.trim();
+            if (!t) return;
+            const merged = buffer ? (buffer + " " + t) : t;
+            if (merged.split(/\s+/).length < 3) {
+                buffer = merged;
+            } else {
+                result.push(merged);
+                buffer = "";
+            }
+        });
+        if (buffer) {
+            if (result.length > 0) result[result.length - 1] += " " + buffer;
+            else result.push(buffer);
+        }
+        return result;
+    }
+
 // --- INCOLLA QUI LA FUNZIONE DI PULIZIA ---
     function rimuoviTagHTML(testo) {
         if (!testo) return "";
@@ -514,6 +542,12 @@
 
     let bloccoResetInPausaOpera = false;
     let bloccoResetInPausaMonumento = false;
+
+    // NUOVO: chunking a frasi per ripresa affidabile su mobile
+    let arrayFrasiOpera = [];
+    let indiceFraseCorrenteOpera = 0;
+    let arrayFrasiMonumento = [];
+    let indiceFraseCorrenteMonumento = 0;
 
     let mappaLeafletIstanza = null;
 
@@ -552,6 +586,8 @@
         statoAudioMonumento = "stop";
         indiceParolaCorrenteOpera = 0;
         indiceParolaCorrenteMonumento = 0;
+	indiceFraseCorrenteOpera = 0;
+        indiceFraseCorrenteMonumento = 0;
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
@@ -991,8 +1027,10 @@ function generaSchermataTappe() {
       // I pulsanti Mappa Extraurbano e Mappa Cittadino sono stati rimossi definitivamente
 
         testoAudioMonumentoAttuale = m.testoStoria ? m.testoStoria.trim() : "";
-        arrayParoleMonumento = testoAudioMonumentoAttuale ? testoAudioMonumentoAttuale.split(/\s+/) : [];
+         arrayParoleMonumento = testoAudioMonumentoAttuale ? testoAudioMonumentoAttuale.split(/\s+/) : [];
         indiceParolaCorrenteMonumento = 0;
+        arrayFrasiMonumento = splittaInFrasi(testoAudioMonumentoAttuale);
+        indiceFraseCorrenteMonumento = 0;
 
         if (testoAudioMonumentoAttuale !== "") {
             document.getElementById('monument-audio-wrapper').style.display = 'flex';
@@ -1275,6 +1313,8 @@ function mostraSchermataAudio(o) {
         testoAudioAttuale = testoSelezionato;
         arrayParoleOpera = testoAudioAttuale ? testoAudioAttuale.split(/\s+/) : [];
         indiceParolaCorrenteOpera = 0;
+        arrayFrasiOpera = splittaInFrasi(testoAudioAttuale);
+        indiceFraseCorrenteOpera = 0;
 
         const btnAttiva = document.getElementById('btn-attiva-ai');
         if (testoAudioAttuale !== "") {
@@ -1361,27 +1401,36 @@ function indietroDallAudio() {
         document.getElementById('monument-state-paused').style.display = 'none';
     }
 
-   let timerSincroMonumento = null;
-
-function gestisciAudioMonumento() {
-    if (!('speechSynthesis' in window) || arrayParoleMonumento.length === 0) return;
-
-    if (timerSincroMonumento) clearInterval(timerSincroMonumento);
+   function gestisciAudioMonumento() {
+    if (!('speechSynthesis' in window) || arrayFrasiMonumento.length === 0) return;
 
     statoAudioMonumento = "playing";
     bloccoResetInPausaMonumento = false;
 
     document.getElementById('monument-state-playing').style.display = 'block';
     document.getElementById('monument-state-paused').style.display = 'none';
-    
+
     window.speechSynthesis.cancel();
 
-    // Dentro gestisciAudioMonumento():
-    let indiceDiPartenza = indiceParolaCorrenteMonumento;
-    const offsetIniziale = indiceDiPartenza;
+    if (indiceFraseCorrenteMonumento < 0 || indiceFraseCorrenteMonumento >= arrayFrasiMonumento.length) {
+        indiceFraseCorrenteMonumento = 0;
+    }
 
-    let testoPulito = rimuoviTagHTML(arrayParoleMonumento.slice(indiceDiPartenza).join(" "));
-    const unita = new SpeechSynthesisUtterance(testoPulito);
+    parlaFraseMonumento();
+}
+
+function parlaFraseMonumento() {
+    if (statoAudioMonumento !== "playing") return;
+
+    if (indiceFraseCorrenteMonumento >= arrayFrasiMonumento.length) {
+        statoAudioMonumento = "stop";
+        indiceFraseCorrenteMonumento = 0;
+        resetBottoniMonumentoNormale();
+        return;
+    }
+
+    const frase = arrayFrasiMonumento[indiceFraseCorrenteMonumento];
+    const unita = new SpeechSynthesisUtterance(frase);
     unita.lang = 'it-IT';
     unita.rate = 0.95;
 
@@ -1389,38 +1438,23 @@ function gestisciAudioMonumento() {
     const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
     if (voceMigliore) unita.voice = voceMigliore;
 
-    let tempoInizio = Date.now();
-    timerSincroMonumento = setInterval(() => {
-        if (statoAudioMonumento === "playing" && window.speechSynthesis.speaking) {
-            let paroleLetteStimate = Math.floor(((Date.now() - tempoInizio) / 1000) * 2.5);
-            let nuovaPosizione = offsetIniziale + paroleLetteStimate;
-            if (nuovaPosizione < arrayParoleMonumento.length) {
-                indiceParolaCorrenteMonumento = nuovaPosizione;
-            }
-        }
-    }, 200);
-
-    unita.onboundary = function(event) {
-        if (event.name === 'word' && event.charIndex !== undefined) {
-            const testoFinoAQui = testoPulito.substring(0, event.charIndex);
-            const paroleLetteEffettive = testoFinoAQui.trim().split(/\s+/).filter(Boolean).length;
-            indiceParolaCorrenteMonumento = offsetIniziale + paroleLetteEffettive;
-        }
-    };
-
     unita.onend = function() {
-        if (timerSincroMonumento) clearInterval(timerSincroMonumento);
-        if (bloccoResetInPausaMonumento) return;
-        statoAudioMonumento = "stop";
-        indiceParolaCorrenteMonumento = 0;
-        resetBottoniMonumentoNormale();
+        if (bloccoResetInPausaMonumento) return;      // Utente ha messo in pausa: NON avanzare
+        if (statoAudioMonumento !== "playing") return;
+        indiceFraseCorrenteMonumento++;                // Avanza solo se ha finito naturalmente
+        parlaFraseMonumento();
     };
 
-    unita.onerror = function() {
-        if (timerSincroMonumento) clearInterval(timerSincroMonumento);
+    unita.onerror = function(e) {
         if (bloccoResetInPausaMonumento) return;
+        // Su alcuni motori Android capita un "interrupted" spurio: proviamo la frase successiva
+        if (e && e.error === 'interrupted') {
+            indiceFraseCorrenteMonumento++;
+            parlaFraseMonumento();
+            return;
+        }
         statoAudioMonumento = "stop";
-        indiceParolaCorrenteMonumento = 0;
+        indiceFraseCorrenteMonumento = 0;
         resetBottoniMonumentoNormale();
     };
 
@@ -1431,26 +1465,20 @@ function pausaAudioMonumento() {
     if ('speechSynthesis' in window) {
         bloccoResetInPausaMonumento = true;
         statoAudioMonumento = "paused";
-        if (timerSincroMonumento) clearInterval(timerSincroMonumento);
-
-        // TORNA INDIETRO DI 3 PAROLE RISPETTO AL MOMENTO DEL TAP
-        if (indiceParolaCorrenteMonumento > 0) {
-            indiceParolaCorrenteMonumento = Math.max(0, indiceParolaCorrenteMonumento - 3);
-        }
-
+        // Non decrementiamo nulla: alla ripresa si riparte dall'inizio della frase corrente
         window.speechSynthesis.cancel();
-        
         document.getElementById('monument-state-playing').style.display = 'none';
         document.getElementById('monument-state-paused').style.display = 'block';
     }
 }
-    function riprendiAudioMonumento() {
-        gestisciAudioMonumento();
-    }
 
-    function riavviaAudioMonumentoDaCapo() {
-        indiceParolaCorrenteMonumento = 0;
-        gestisciAudioMonumento();
+function riprendiAudioMonumento() {
+    gestisciAudioMonumento();   // riparte dalla frase in cui era rimasto
+}
+
+function riavviaAudioMonumentoDaCapo() {
+        indiceFraseCorrenteMonumento = 0;
+   	gestisciAudioMonumento();
     }
 
     function avviaCiceroneAI() {
@@ -1466,9 +1494,8 @@ function pausaAudioMonumento() {
         document.getElementById('opera-state-paused').style.display = 'none';
     }
 
-let timerSincroOpera = null;
 function gestisciAudioOpera() {
-    if (!('speechSynthesis' in window) || arrayParoleOpera.length === 0) return;
+    if (!('speechSynthesis' in window) || arrayFrasiOpera.length === 0) return;
 
     statoAudioOpera = "playing";
     bloccoResetInPausaOpera = false;
@@ -1477,145 +1504,76 @@ function gestisciAudioOpera() {
     document.getElementById('opera-state-playing').style.display = 'block';
     document.getElementById('opera-state-paused').style.display = 'none';
 
-    // Ferma completamente l'eventuale sintesi precedente
     window.speechSynthesis.cancel();
 
-    // Memorizza ESATTAMENTE da quale parola dobbiamo ripartire
-    const indiceDiPartenza = indiceParolaCorrenteOpera;
-    const offsetIniziale = indiceDiPartenza;
+    if (indiceFraseCorrenteOpera < 0 || indiceFraseCorrenteOpera >= arrayFrasiOpera.length) {
+        indiceFraseCorrenteOpera = 0;
+    }
 
-    const testoPulito = rimuoviTagHTML(
-        arrayParoleOpera.slice(indiceDiPartenza).join(" ")
-    );
+    svegliaCasseConUltrasuono(() => {
+        parlaFraseOpera();
+    });
+}
 
-    const unita = new SpeechSynthesisUtterance(testoPulito);
+function parlaFraseOpera() {
+    if (statoAudioOpera !== "playing") return;
 
+    if (indiceFraseCorrenteOpera >= arrayFrasiOpera.length) {
+        statoAudioOpera = "stop";
+        indiceFraseCorrenteOpera = 0;
+        resetBottoniStatoNormale();
+        return;
+    }
+
+    const frase = arrayFrasiOpera[indiceFraseCorrenteOpera];
+    const unita = new SpeechSynthesisUtterance(frase);
     unita.lang = 'it-IT';
     unita.rate = 0.95;
 
-    // Selezione della voce italiana
     const voci = window.speechSynthesis.getVoices();
-
-    const voceMigliore = voci.find(v =>
-        v.lang.includes('it-IT') &&
-        (
-            v.name.includes('Google') ||
-            v.name.includes('Natural') ||
-            v.name.includes('Premium')
-        )
-    );
-
-    if (voceMigliore) {
-        unita.voice = voceMigliore;
-    }
-
-    /*
-     * IMPORTANTE:
-     * NON usiamo più un timer basato su "2.5 parole al secondo".
-     *
-     * Su Android la velocità reale della sintesi può variare.
-     * La posizione viene aggiornata solamente quando il motore
-     * comunica una boundary di tipo "word".
-     */
-    unita.onboundary = function(event) {
-
-        if (
-            event.name === 'word' &&
-            typeof event.charIndex === 'number'
-        ) {
-
-            const testoFinoAQui =
-                testoPulito.substring(0, event.charIndex);
-
-            const paroleLetteEffettive =
-                testoFinoAQui
-                    .trim()
-                    .split(/\s+/)
-                    .filter(Boolean)
-                    .length;
-
-            const nuovaPosizione =
-                offsetIniziale + paroleLetteEffettive;
-
-            if (nuovaPosizione < arrayParoleOpera.length) {
-                indiceParolaCorrenteOpera = nuovaPosizione;
-            }
-        }
-    };
+    const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
+    if (voceMigliore) unita.voice = voceMigliore;
 
     unita.onend = function() {
+        if (bloccoResetInPausaOpera) return;
+        if (statoAudioOpera !== "playing") return;
+        indiceFraseCorrenteOpera++;
+        parlaFraseOpera();
+    };
 
-        if (bloccoResetInPausaOpera) {
+    unita.onerror = function(e) {
+        if (bloccoResetInPausaOpera) return;
+        if (e && e.error === 'interrupted') {
+            indiceFraseCorrenteOpera++;
+            parlaFraseOpera();
             return;
         }
-
         statoAudioOpera = "stop";
-        indiceParolaCorrenteOpera = 0;
-
+        indiceFraseCorrenteOpera = 0;
         resetBottoniStatoNormale();
     };
 
-    unita.onerror = function() {
-
-        if (bloccoResetInPausaOpera) {
-            return;
-        }
-
-        statoAudioOpera = "stop";
-        indiceParolaCorrenteOpera = 0;
-
-        resetBottoniStatoNormale();
-    };
-
-    /*
-     * Piccolo ritardo per permettere ad Android di completare
-     * l'eventuale cancel() precedente prima di avviare la nuova utterance.
-     */
-    setTimeout(() => {
-
-        if (statoAudioOpera === "playing") {
-            window.speechSynthesis.speak(unita);
-        }
-
-    }, 50);
+    window.speechSynthesis.speak(unita);
 }
 
 function pausaAudioOpera() {
-
-    if (!('speechSynthesis' in window)) return;
-
-    // Prima blocchiamo l'aggiornamento dello stato
-    bloccoResetInPausaOpera = true;
-    statoAudioOpera = "paused";
-
-    /*
-     * La posizione è stata aggiornata dall'ultimo evento "word".
-     * Non abbiamo più il timer che la sovrascrive con una stima.
-     */
-
-    if (indiceParolaCorrenteOpera > 0) {
-        indiceParolaCorrenteOpera =
-            Math.max(0, indiceParolaCorrenteOpera - 3);
+    if ('speechSynthesis' in window) {
+        bloccoResetInPausaOpera = true;
+        statoAudioOpera = "paused";
+        window.speechSynthesis.cancel();
+        document.getElementById('opera-state-ready').style.display = 'none';
+        document.getElementById('opera-state-playing').style.display = 'none';
+        document.getElementById('opera-state-paused').style.display = 'block';
     }
-
-    /*
-     * Cancel invece di pause():
-     * così alla ripresa ricostruiamo l'utterance dal punto corretto.
-     */
-    window.speechSynthesis.cancel();
-
-    document.getElementById('opera-state-ready').style.display = 'none';
-    document.getElementById('opera-state-playing').style.display = 'none';
-    document.getElementById('opera-state-paused').style.display = 'block';
 }
-    function riprendiAudioOpera() {
-        gestisciAudioOpera();
-    }
 
-    function riavviaAudioOperaDaCapo() {
-        indiceParolaCorrenteOpera = 0;
-        gestisciAudioOpera();
-    }
+function riprendiAudioOpera() {
+    gestisciAudioOpera();
+}
+
+function riavviaAudioOperaDaCapo() {
+    indiceFraseCorrenteOpera = 0;
+    gestisciAudioOpera();    }
 // Registrazione del Service Worker per la PWA offline
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
