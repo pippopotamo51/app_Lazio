@@ -1467,12 +1467,8 @@ function pausaAudioMonumento() {
     }
 
 let timerSincroOpera = null;
-
 function gestisciAudioOpera() {
     if (!('speechSynthesis' in window) || arrayParoleOpera.length === 0) return;
-    
-    // Ferma eventuali timer precedenti
-    if (timerSincroOpera) clearInterval(timerSincroOpera);
 
     statoAudioOpera = "playing";
     bloccoResetInPausaOpera = false;
@@ -1480,83 +1476,138 @@ function gestisciAudioOpera() {
     document.getElementById('opera-state-ready').style.display = 'none';
     document.getElementById('opera-state-playing').style.display = 'block';
     document.getElementById('opera-state-paused').style.display = 'none';
-    
+
+    // Ferma completamente l'eventuale sintesi precedente
     window.speechSynthesis.cancel();
 
-    // Dentro gestisciAudioOpera():
-    let indiceDiPartenza = indiceParolaCorrenteOpera;
+    // Memorizza ESATTAMENTE da quale parola dobbiamo ripartire
+    const indiceDiPartenza = indiceParolaCorrenteOpera;
     const offsetIniziale = indiceDiPartenza;
 
-    let testoPulito = rimuoviTagHTML(arrayParoleOpera.slice(indiceDiPartenza).join(" "));
+    const testoPulito = rimuoviTagHTML(
+        arrayParoleOpera.slice(indiceDiPartenza).join(" ")
+    );
+
     const unita = new SpeechSynthesisUtterance(testoPulito);
+
     unita.lang = 'it-IT';
     unita.rate = 0.95;
 
+    // Selezione della voce italiana
     const voci = window.speechSynthesis.getVoices();
-    const voceMigliore = voci.find(v => v.lang.includes('it-IT') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
-    if (voceMigliore) unita.voice = voceMigliore;
 
-    // Timer di backup ogni 200ms per salvare sempre la posizione anche su Android/iOS
-    let tempoInizio = Date.now();
-    timerSincroOpera = setInterval(() => {
-        if (statoAudioOpera === "playing" && window.speechSynthesis.speaking) {
-            // Stima della lettura: circa 2.5 parole al secondo (con rate 0.95)
-            let paroleLetteStimate = Math.floor(((Date.now() - tempoInizio) / 1000) * 2.5);
-            let nuovaPosizione = offsetIniziale + paroleLetteStimate;
+    const voceMigliore = voci.find(v =>
+        v.lang.includes('it-IT') &&
+        (
+            v.name.includes('Google') ||
+            v.name.includes('Natural') ||
+            v.name.includes('Premium')
+        )
+    );
+
+    if (voceMigliore) {
+        unita.voice = voceMigliore;
+    }
+
+    /*
+     * IMPORTANTE:
+     * NON usiamo più un timer basato su "2.5 parole al secondo".
+     *
+     * Su Android la velocità reale della sintesi può variare.
+     * La posizione viene aggiornata solamente quando il motore
+     * comunica una boundary di tipo "word".
+     */
+    unita.onboundary = function(event) {
+
+        if (
+            event.name === 'word' &&
+            typeof event.charIndex === 'number'
+        ) {
+
+            const testoFinoAQui =
+                testoPulito.substring(0, event.charIndex);
+
+            const paroleLetteEffettive =
+                testoFinoAQui
+                    .trim()
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .length;
+
+            const nuovaPosizione =
+                offsetIniziale + paroleLetteEffettive;
+
             if (nuovaPosizione < arrayParoleOpera.length) {
                 indiceParolaCorrenteOpera = nuovaPosizione;
             }
         }
-    }, 200);
-
-    unita.onboundary = function(event) {
-        if (event.name === 'word' && event.charIndex !== undefined) {
-            const testoFinoAQui = testoPulito.substring(0, event.charIndex);
-            const paroleLetteEffettive = testoFinoAQui.trim().split(/\s+/).filter(Boolean).length;
-            indiceParolaCorrenteOpera = offsetIniziale + paroleLetteEffettive;
-        }
     };
 
     unita.onend = function() {
-        if (timerSincroOpera) clearInterval(timerSincroOpera);
-        if (bloccoResetInPausaOpera) return;
+
+        if (bloccoResetInPausaOpera) {
+            return;
+        }
+
         statoAudioOpera = "stop";
         indiceParolaCorrenteOpera = 0;
+
         resetBottoniStatoNormale();
     };
 
     unita.onerror = function() {
-        if (timerSincroOpera) clearInterval(timerSincroOpera);
-        if (bloccoResetInPausaOpera) return;
+
+        if (bloccoResetInPausaOpera) {
+            return;
+        }
+
         statoAudioOpera = "stop";
         indiceParolaCorrenteOpera = 0;
+
         resetBottoniStatoNormale();
     };
 
-    svegliaCasseConUltrasuono(() => {
-        window.speechSynthesis.speak(unita);
-    });
+    /*
+     * Piccolo ritardo per permettere ad Android di completare
+     * l'eventuale cancel() precedente prima di avviare la nuova utterance.
+     */
+    setTimeout(() => {
+
+        if (statoAudioOpera === "playing") {
+            window.speechSynthesis.speak(unita);
+        }
+
+    }, 50);
 }
 
 function pausaAudioOpera() {
-    if ('speechSynthesis' in window) {
-        bloccoResetInPausaOpera = true;
-        statoAudioOpera = "paused";
-        if (timerSincroOpera) clearInterval(timerSincroOpera);
 
-        // TORNA INDIETRO DI 3 PAROLE RISPETTO AL MOMENTO DEL TAP
-        if (indiceParolaCorrenteOpera > 0) {
-            indiceParolaCorrenteOpera = Math.max(0, indiceParolaCorrenteOpera - 3);
-        }
-        
-        window.speechSynthesis.cancel();
-        
-        document.getElementById('opera-state-ready').style.display = 'none';
-        document.getElementById('opera-state-playing').style.display = 'none';
-        document.getElementById('opera-state-paused').style.display = 'block';
+    if (!('speechSynthesis' in window)) return;
+
+    // Prima blocchiamo l'aggiornamento dello stato
+    bloccoResetInPausaOpera = true;
+    statoAudioOpera = "paused";
+
+    /*
+     * La posizione è stata aggiornata dall'ultimo evento "word".
+     * Non abbiamo più il timer che la sovrascrive con una stima.
+     */
+
+    if (indiceParolaCorrenteOpera > 0) {
+        indiceParolaCorrenteOpera =
+            Math.max(0, indiceParolaCorrenteOpera - 3);
     }
-}
 
+    /*
+     * Cancel invece di pause():
+     * così alla ripresa ricostruiamo l'utterance dal punto corretto.
+     */
+    window.speechSynthesis.cancel();
+
+    document.getElementById('opera-state-ready').style.display = 'none';
+    document.getElementById('opera-state-playing').style.display = 'none';
+    document.getElementById('opera-state-paused').style.display = 'block';
+}
     function riprendiAudioOpera() {
         gestisciAudioOpera();
     }
