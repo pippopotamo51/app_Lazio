@@ -492,31 +492,50 @@
     let testoAudioAttuale = "";
   // Divide un testo in frasi mantenendo la punteggiatura.
     // Le frasi troppo corte (< 3 parole) vengono unite alla successiva per naturalezza.
-    function splittaInFrasi(testo) {
-        if (!testo) return [];
-        const pulito = rimuoviTagHTML(testo).replace(/\s+/g, ' ').trim();
-        if (!pulito) return [];
-        const raw = pulito.match(/[^.!?;]+[.!?;]+|\S[^.!?;]*$/g);
-        if (!raw) return [pulito];
-        const result = [];
-        let buffer = "";
-        raw.forEach(f => {
-            const t = f.trim();
-            if (!t) return;
-            const merged = buffer ? (buffer + " " + t) : t;
-            if (merged.split(/\s+/).length < 3) {
-                buffer = merged;
+   function splittaInFrasi(testo) {
+    if (!testo) return [];
+
+    // Elimina i tag HTML, compresi <br>
+    const pulito = testo
+        .replace(/<br\s*\/?>/gi, ' ')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    // Divide dopo . ! ? ; :
+    const raw = pulito.match(/[^.!?:;,]+[.!?:;,]+|\S[^.!?:;,]*$/g);
+
+    if (!raw) return [pulito];
+
+    const frasi = [];
+    let accumulo = "";
+
+    raw.forEach(parte => {
+        parte = parte.trim();
+
+        if (!parte) return;
+
+        if (accumulo === "") {
+            accumulo = parte;
+        } else {
+            const paroleAccumulate = accumulo.split(/\s+/).length;
+
+            // Mantiene l'accorpamento delle frasi molto brevi
+            if (paroleAccumulate < 3) {
+                accumulo += " " + parte;
             } else {
-                result.push(merged);
-                buffer = "";
+                frasi.push(accumulo);
+                accumulo = parte;
             }
-        });
-        if (buffer) {
-            if (result.length > 0) result[result.length - 1] += " " + buffer;
-            else result.push(buffer);
         }
-        return result;
+    });
+
+    if (accumulo) {
+        frasi.push(accumulo);
     }
+
+    return frasi;
+}
 
 // --- INCOLLA QUI LA FUNZIONE DI PULIZIA ---
     function rimuoviTagHTML(testo) {
