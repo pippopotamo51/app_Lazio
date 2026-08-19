@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cicerone-cache-v1'; // Incrementata la versione per aggiornare la cache sui dispositivi
+const CACHE_NAME = 'cicerone-cache-v12; // Incrementata la versione per aggiornare la cache sui dispositivi
 
 // Mettiamo in cache iniziale solo i file testuali indispensabili
 const ASSETS_TO_CACHE = [
@@ -6,7 +6,7 @@ const ASSETS_TO_CACHE = [
   './manifest.json', //[cite: 2]
   './Leaflet/leaflet.css', //[cite: 2]
   './Leaflet/leaflet.js' //[cite: 2]
-];
+]'./Vacanze_LAZIO.csv'
 
 // 1. Installazione[cite: 2]
 self.addEventListener('install', (event) => {
